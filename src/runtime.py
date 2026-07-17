@@ -378,6 +378,52 @@ def _sym_eval(expr_ptr: int, var_ptr: int, val: float) -> float:
     result   = expr_sym.subs(var_sym, val)
     return float(result)
 
+
+def _sym_integrate(expr_ptr: int, var_ptr: int) -> int:
+    """Indefinite symbolic integration: integral(expr, var)"""
+    if not HAS_SYMPY:
+        raise RuntimeError("sympy is not installed")
+    # expr_ptr may be a C string pointer OR a registry ID
+    obj = _registry.get(expr_ptr)
+    if isinstance(obj, VectSym):
+        expr_str = obj.expr_str
+    else:
+        try:
+            expr_str = ctypes.string_at(expr_ptr).decode('utf-8')
+        except Exception:
+            expr_str = str(obj) if obj else '0'
+    try:
+        var_str = ctypes.string_at(var_ptr).decode('utf-8')
+    except Exception:
+        var_str = 'x'
+    var_sym  = sympy.Symbol(var_str)
+    expr_sym = sympy.sympify(expr_str)
+    result   = sympy.integrate(expr_sym, var_sym)
+    return _register(VectSym(str(result)))
+
+
+def _sym_integrate_definite(expr_ptr: int, var_ptr: int,
+                             lo: float, hi: float) -> float:
+    """Definite symbolic integration: integral(expr, var, lo, hi) → float"""
+    if not HAS_SYMPY:
+        raise RuntimeError("sympy is not installed")
+    obj = _registry.get(expr_ptr)
+    if isinstance(obj, VectSym):
+        expr_str = obj.expr_str
+    else:
+        try:
+            expr_str = ctypes.string_at(expr_ptr).decode('utf-8')
+        except Exception:
+            expr_str = str(obj) if obj else '0'
+    try:
+        var_str = ctypes.string_at(var_ptr).decode('utf-8')
+    except Exception:
+        var_str = 'x'
+    var_sym  = sympy.Symbol(var_str)
+    expr_sym = sympy.sympify(expr_str)
+    result   = sympy.integrate(expr_sym, (var_sym, lo, hi))
+    return float(result)
+
 # --- Math builtins ---
 
 def _sqrt(x: float) -> float: return math.sqrt(x)
@@ -387,6 +433,254 @@ def _tan(x: float) -> float:  return math.tan(x)
 def _abs_f(x: float) -> float: return abs(x)
 def _floor(x: float) -> int:  return int(math.floor(x))
 def _ceil(x: float) -> int:   return int(math.ceil(x))
+
+# ---------------------------------------------------------------------------
+# Vec/Mat stdlib — new in v2
+# ---------------------------------------------------------------------------
+
+def _vec_norm(ptr: int) -> float:
+    """Euclidean norm (magnitude) of a vector: sqrt(sum(x²))"""
+    vec = _get(ptr)
+    return math.sqrt(sum(x*x for x in vec.data))
+
+def _vec_cross(a_ptr: int, b_ptr: int) -> int:
+    """3D cross product. Vectors must have length 3."""
+    a, b = _get(a_ptr), _get(b_ptr)
+    if len(a) != 3 or len(b) != 3:
+        raise RuntimeError("cross product requires two 3D vectors")
+    cx = a[1]*b[2] - a[2]*b[1]
+    cy = a[2]*b[0] - a[0]*b[2]
+    cz = a[0]*b[1] - a[1]*b[0]
+    return _register(VectVec([cx, cy, cz]))
+
+def _vec_normalize(ptr: int) -> int:
+    """Return a unit vector (magnitude = 1)."""
+    vec = _get(ptr)
+    mag = math.sqrt(sum(x*x for x in vec.data))
+    if mag == 0:
+        raise RuntimeError("Cannot normalize a zero vector")
+    return _register(VectVec([x / mag for x in vec.data]))
+
+def _mat_det(ptr: int) -> float:
+    """Determinant of a square matrix (uses Gaussian elimination)."""
+    mat = _get(ptr)
+    n = mat.nrows
+    if n != mat.ncols:
+        raise RuntimeError(f"det requires a square matrix, got {n}x{mat.ncols}")
+    # Build a mutable copy as list-of-lists
+    M = [[mat.rows[i][j] for j in range(n)] for i in range(n)]
+    sign = 1.0
+    for col in range(n):
+        # Find pivot
+        pivot_row = None
+        for row in range(col, n):
+            if abs(M[row][col]) > 1e-12:
+                pivot_row = row
+                break
+        if pivot_row is None:
+            return 0.0
+        if pivot_row != col:
+            M[col], M[pivot_row] = M[pivot_row], M[col]
+            sign *= -1
+        for row in range(col + 1, n):
+            factor = M[row][col] / M[col][col]
+            for k in range(col, n):
+                M[row][k] -= factor * M[col][k]
+    result = sign
+    for i in range(n):
+        result *= M[i][i]
+    return result
+
+def _mat_inv(ptr: int) -> int:
+    """Inverse of a square matrix using Gauss-Jordan elimination."""
+    mat = _get(ptr)
+    n = mat.nrows
+    if n != mat.ncols:
+        raise RuntimeError("inv requires a square matrix")
+    # Augmented matrix [M | I]
+    M = [[mat.rows[i][j] for j in range(n)] for i in range(n)]
+    I = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
+    for col in range(n):
+        # Pivot
+        pivot = None
+        for row in range(col, n):
+            if abs(M[row][col]) > 1e-12:
+                pivot = row
+                break
+        if pivot is None:
+            raise RuntimeError("Matrix is singular — inverse does not exist")
+        M[col], M[pivot] = M[pivot], M[col]
+        I[col], I[pivot] = I[pivot], I[col]
+        scale = M[col][col]
+        M[col] = [v / scale for v in M[col]]
+        I[col] = [v / scale for v in I[col]]
+        for row in range(n):
+            if row != col:
+                factor = M[row][col]
+                M[row] = [M[row][k] - factor * M[col][k] for k in range(n)]
+                I[row] = [I[row][k] - factor * I[col][k] for k in range(n)]
+    result_rows = [VectVec(I[i]) for i in range(n)]
+    return _register(VectMat(result_rows))
+
+def _mat_solve(mat_ptr: int, vec_ptr: int) -> int:
+    """
+    Solve the linear system Ax = b.
+    mat_ptr → A (n×n matrix), vec_ptr → b (vec of length n).
+    Returns x as a vec.
+    """
+    A_mat = _get(mat_ptr)
+    b_vec = _get(vec_ptr)
+    n = A_mat.nrows
+    # Augmented [A | b]
+    M = [[A_mat.rows[i][j] for j in range(n)] + [b_vec[i]] for i in range(n)]
+    for col in range(n):
+        pivot = None
+        for row in range(col, n):
+            if abs(M[row][col]) > 1e-12:
+                pivot = row
+                break
+        if pivot is None:
+            raise RuntimeError("System has no unique solution")
+        M[col], M[pivot] = M[pivot], M[col]
+        scale = M[col][col]
+        M[col] = [v / scale for v in M[col]]
+        for row in range(n):
+            if row != col:
+                factor = M[row][col]
+                M[row] = [M[row][k] - factor * M[col][k] for k in range(n + 1)]
+    x = VectVec([M[i][n] for i in range(n)])
+    return _register(x)
+
+def _vec_zeros(n: int) -> int:
+    """Create a zero vector of length n."""
+    return _register(VectVec([0.0] * n))
+
+def _vec_ones(n: int) -> int:
+    """Create a vector of ones of length n."""
+    return _register(VectVec([1.0] * n))
+
+
+# ---------------------------------------------------------------------------
+# Plot — v2 feature
+# ---------------------------------------------------------------------------
+
+def _plot_sym(expr_ptr: int, var_ptr: int, lo: float, hi: float,
+              title_ptr: int) -> int:
+    """
+    Plot a symbolic expression over [lo, hi].
+    expr_ptr  → C string with the sympy-parseable expression
+    var_ptr   → C string with the variable name
+    lo, hi    → range
+    title_ptr → C string with plot title (may be 0/empty)
+    """
+    try:
+        import matplotlib
+        matplotlib.use('Agg')   # non-interactive backend — saves to file
+        import matplotlib.pyplot as plt
+        import numpy as np_plot
+
+        # Decode strings
+        obj = _registry.get(expr_ptr)
+        if isinstance(obj, VectSym):
+            expr_str = obj.expr_str
+        else:
+            try:
+                expr_str = ctypes.string_at(expr_ptr).decode('utf-8')
+            except Exception:
+                expr_str = '0'
+
+        try:
+            var_str = ctypes.string_at(var_ptr).decode('utf-8')
+        except Exception:
+            var_str = 'x'
+
+        title_str = ''
+        if title_ptr and title_ptr > 0:
+            try:
+                title_str = ctypes.string_at(title_ptr).decode('utf-8')
+            except Exception:
+                title_obj = _registry.get(title_ptr)
+                if isinstance(title_obj, str):
+                    title_str = title_obj
+
+        # Evaluate numerically
+        if HAS_SYMPY:
+            var_sym  = sympy.Symbol(var_str)
+            expr_sym = sympy.sympify(expr_str)
+            xs = np_plot.linspace(lo, hi, 400)
+            ys = []
+            for xv in xs:
+                try:
+                    ys.append(float(expr_sym.subs(var_sym, xv)))
+                except Exception:
+                    ys.append(float('nan'))
+        else:
+            raise RuntimeError("sympy required for plot()")
+
+        # Plot
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(xs, ys, linewidth=2, color='#0f3460')
+        ax.axhline(0, color='black', linewidth=0.8, alpha=0.5)
+        ax.axvline(0, color='black', linewidth=0.8, alpha=0.5)
+        ax.grid(True, alpha=0.3)
+        ax.set_xlabel(var_str, fontsize=12)
+        ax.set_ylabel(f'f({var_str})', fontsize=12)
+        label = title_str if title_str else f'f({var_str}) = {expr_str}'
+        ax.set_title(label, fontsize=13)
+        plt.tight_layout()
+
+        # Save to file
+        out_file = 'vect_plot.png'
+        plt.savefig(out_file, dpi=150)
+        plt.close()
+        print(f"[plot saved to {out_file}]")
+
+        return 0
+    except Exception as e:
+        print(f"[plot error: {e}]")
+        return 0
+
+
+def _plot_vec(x_ptr: int, y_ptr: int, title_ptr: int) -> int:
+    """
+    Plot two vectors as x/y data.
+    plot_xy(x_vec, y_vec, "title")
+    """
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+
+        x_vec = _get(x_ptr)
+        y_vec = _get(y_ptr)
+        xs = list(x_vec.data)
+        ys = list(y_vec.data)
+
+        title_str = ''
+        if title_ptr and title_ptr > 0:
+            try:
+                title_str = ctypes.string_at(title_ptr).decode('utf-8')
+            except Exception:
+                title_obj = _registry.get(title_ptr)
+                if isinstance(title_obj, str):
+                    title_str = title_obj
+
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(xs, ys, linewidth=2, color='#0f3460', marker='o',
+                markersize=4)
+        ax.axhline(0, color='black', linewidth=0.8, alpha=0.5)
+        ax.grid(True, alpha=0.3)
+        if title_str:
+            ax.set_title(title_str, fontsize=13)
+        plt.tight_layout()
+        out_file = 'vect_plot.png'
+        plt.savefig(out_file, dpi=150)
+        plt.close()
+        print(f"[plot saved to {out_file}]")
+        return 0
+    except Exception as e:
+        print(f"[plot error: {e}]")
+        return 0
 
 # --- String operations ---
 
@@ -481,8 +775,10 @@ def build_runtime() -> Dict[str, Any]:
     reg('vect_mat_scale',    _mat_scale,    C.c_void_p, C.c_void_p, C.c_double)
 
     # Symbolic
-    reg('vect_sym_diff',     _sym_diff,     C.c_void_p, C.c_void_p, C.c_void_p)
-    reg('vect_sym_eval',     _sym_eval,     C.c_double, C.c_void_p, C.c_void_p, C.c_double)
+    reg('vect_sym_diff',              _sym_diff,              C.c_void_p, C.c_void_p, C.c_void_p)
+    reg('vect_sym_eval',              _sym_eval,              C.c_double, C.c_void_p, C.c_void_p, C.c_double)
+    reg('vect_sym_integrate',         _sym_integrate,         C.c_void_p, C.c_void_p, C.c_void_p)
+    reg('vect_sym_integrate_definite',_sym_integrate_definite,C.c_double, C.c_void_p, C.c_void_p, C.c_double, C.c_double)
 
     # Math
     reg('vect_sqrt',  _sqrt,  C.c_double, C.c_double)
@@ -492,6 +788,20 @@ def build_runtime() -> Dict[str, Any]:
     reg('vect_abs_f', _abs_f, C.c_double, C.c_double)
     reg('vect_floor', _floor, C.c_int64,  C.c_double)
     reg('vect_ceil',  _ceil,  C.c_int64,  C.c_double)
+
+    # Vec/Mat stdlib (v2)
+    reg('vect_vec_norm',      _vec_norm,      C.c_double, C.c_void_p)
+    reg('vect_vec_cross',     _vec_cross,     C.c_void_p, C.c_void_p, C.c_void_p)
+    reg('vect_vec_normalize', _vec_normalize, C.c_void_p, C.c_void_p)
+    reg('vect_mat_det',       _mat_det,       C.c_double, C.c_void_p)
+    reg('vect_mat_inv',       _mat_inv,       C.c_void_p, C.c_void_p)
+    reg('vect_mat_solve',     _mat_solve,     C.c_void_p, C.c_void_p, C.c_void_p)
+    reg('vect_zeros',         _vec_zeros,     C.c_void_p, C.c_int64)
+    reg('vect_ones',          _vec_ones,      C.c_void_p, C.c_int64)
+
+    # Plot (v2)
+    reg('vect_plot_sym',  _plot_sym,  C.c_int32, C.c_void_p, C.c_void_p, C.c_double, C.c_double, C.c_void_p)
+    reg('vect_plot_vec',  _plot_vec,  C.c_int32, C.c_void_p, C.c_void_p, C.c_void_p)
 
     # Strings
     reg('vect_str_concat',   _str_concat,   C.c_void_p, C.c_void_p, C.c_void_p)

@@ -2,17 +2,15 @@
 main.py — Vect compiler/runner CLI entry point.
 
 Usage:
-  vect run <file.vect>       Compile and run a .vect source file
-  vect check <file.vect>     Type-check without running
-  vect ir <file.vect>        Dump the generated LLVM IR (debug)
-  vect                       Start the interactive REPL
+  vect run   <file.vect>        Compile and run a .vect source file
+  vect build <file.vect> [-o]   Compile to native .exe (AOT)
+  vect check <file.vect>        Type-check without running
+  vect ir    <file.vect>        Dump generated LLVM IR
+  vect                          Start the interactive REPL
 """
 
 import sys
-import os
-
 import click
-
 from .pipeline import run_source, check_source, get_ir
 
 
@@ -21,7 +19,6 @@ from .pipeline import run_source, check_source, get_ir
 def cli(ctx):
     """Vect — a language with native scientific computing."""
     if ctx.invoked_subcommand is None:
-        # No subcommand: start the REPL
         from .repl import start_repl
         start_repl()
 
@@ -42,13 +39,33 @@ def run(file):
 
 @cli.command()
 @click.argument('file', type=click.Path(exists=True))
+@click.option('-o', '--output', default=None,
+              help='Output path (default: input filename without .vect)')
+def build(file, output):
+    """Compile a .vect file to a native executable (AOT)."""
+    try:
+        from .aot import compile_to_exe
+        with open(file, encoding='utf-8') as f:
+            source = f.read()
+        if output is None:
+            output = str(file).replace('.vect', '')
+        out = compile_to_exe(source, output, filename=file)
+        click.echo(f'  Built: {out}')
+        click.echo(f'  Run with: {out}')
+    except Exception as e:
+        _print_error(e)
+        sys.exit(1)
+
+
+@cli.command()
+@click.argument('file', type=click.Path(exists=True))
 def check(file):
     """Type-check a .vect file without running it."""
     try:
         with open(file, encoding='utf-8') as f:
             source = f.read()
         check_source(source, filename=file)
-        click.echo(f"✓ {file} — no type errors found")
+        click.echo(f'  {file} — no type errors found')
     except Exception as e:
         _print_error(e)
         sys.exit(1)
@@ -57,7 +74,7 @@ def check(file):
 @cli.command()
 @click.argument('file', type=click.Path(exists=True))
 def ir(file):
-    """Dump generated LLVM IR for a .vect file (useful for debugging)."""
+    """Dump generated LLVM IR (useful for debugging / learning)."""
     try:
         with open(file, encoding='utf-8') as f:
             source = f.read()
@@ -69,20 +86,17 @@ def ir(file):
 
 
 def _print_error(e: Exception):
-    """Print a compiler error in a friendly format."""
     kind = type(e).__name__
-    # Our custom errors already have nice messages; just print them cleanly
     if hasattr(e, 'line') and hasattr(e, 'col'):
         msg = str(e)
-        # Highlight the error type
         if 'Syntax' in kind or 'Lex' in kind or 'Parse' in kind:
-            click.echo(f'\n  ⚠  Syntax Error\n  {msg}\n', err=True)
+            click.echo(f'\n  Warning  Syntax Error\n  {msg}\n', err=True)
         elif 'Type' in kind:
-            click.echo(f'\n  ⚠  Type Error\n  {msg}\n', err=True)
+            click.echo(f'\n  Warning  Type Error\n  {msg}\n', err=True)
         else:
-            click.echo(f'\n  ✗  Error\n  {msg}\n', err=True)
+            click.echo(f'\n  Error\n  {msg}\n', err=True)
     else:
-        click.echo(f'\n  ✗  {kind}: {e}\n', err=True)
+        click.echo(f'\n  {kind}: {e}\n', err=True)
 
 
 if __name__ == '__main__':

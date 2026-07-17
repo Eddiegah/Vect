@@ -16,3 +16,7 @@ dist/
 *.vect.out
 *.ll
 *.bc
+*.o
+*.exe
+vect_plot.png
+vect_plot*.png

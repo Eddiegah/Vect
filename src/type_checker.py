@@ -530,6 +530,11 @@ class TypeChecker:
     def _infer_call(self, node: FuncCall, env: Env) -> str:
         name = node.name
 
+        # Symbolic calls — skip argument type-checking entirely
+        # (args contain unbound symbolic variables like x, t)
+        if name == 'integral':
+            return SYM if len(node.args) == 2 else FLOAT
+
         # Built-in: print is variadic, always void
         if name == 'print':
             for arg in node.args:
@@ -572,6 +577,28 @@ class TypeChecker:
                     node.args[0].line, node.args[0].col
                 )
             return FLOAT if name not in ('floor', 'ceil') else INT
+
+        # Vec/mat stdlib (v2)
+        if name == 'norm':
+            return FLOAT
+        if name in ('cross', 'normalize', 'zeros', 'ones'):
+            return VEC
+        if name == 'det':
+            return FLOAT
+        if name in ('inv',):
+            return MAT
+        if name == 'solve':
+            return VEC
+
+        # Symbolic integration — first arg is a symbolic call, skip type-checking it
+        if name == 'integral':
+            if len(node.args) == 2:
+                return SYM
+            return FLOAT
+
+        # Plot functions
+        if name in ('plot', 'plot_xy'):
+            return VOID
 
         # Type conversion builtins
         if name == 'int':

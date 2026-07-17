@@ -1,0 +1,12 @@
+# plot_demo.vect — native plotting in Vect
+# Saves a PNG called vect_plot.png in the current directory
+
+# Plot a sine wave
+sym wave(x) = sin(x) * 2.0 + 0.5*sin(3.0*x)
+plot(wave(x), x, -6.28, 6.28, "Wave: sin(x)*2 + 0.5*sin(3x)")
+print("Wave plot saved.")
+
+# Plot the derivative alongside a description
+sym f(x) = x**3 - 3*x**2 + 2
+var df = d/dx(f(x))
+print(f"Derivative: {df}")

@@ -1,0 +1,32 @@
+# v2 Calculus — symbolic integration and multi-variable differentiation
+
+# Differentiation (same as v1, any variable name after d/d)
+sym f(x) = x**3 - 6*x**2 + 9*x
+var df = d/dx(f(x))
+print(df)                          # 3*x**2 - 12*x + 9
+print(eval(df, x=1.0))             # 0.0  (local maximum)
+print(eval(df, x=3.0))             # 0.0  (local minimum)
+
+# Indefinite integration — returns the antiderivative as a symbolic expression
+sym parabola(x) = x**2
+var antideriv = integral(d/dx(parabola(x)), "x")
+print(antideriv)                   # x**2  (back to original up to constant)
+
+# Definite integration — returns a float (area under curve)
+var area = integral(parabola(x), "x", 0.0, 3.0)
+print(area)                        # 9.0   (area under x^2 from 0 to 3)
+
+# Work done by a variable force F(x) = 2x + 1 over distance 0 to 5
+sym force(x) = 2.0*x + 1.0
+var work = integral(force(x), "x", 0.0, 5.0)
+print(work)                        # 30.0 Joules
+
+# Physics — velocity from acceleration
+sym accel(t) = 9.8
+var vel = integral(accel(t), "t")
+print(vel)                         # 9.8*t (velocity = integral of acceleration)
+
+# Kinematics — position from velocity
+sym velocity(t) = 20.0 - 9.8*t
+var pos_area = integral(velocity(t), "t", 0.0, 2.041)
+print(pos_area)                    # ≈ 20.4  (distance traveled to peak)

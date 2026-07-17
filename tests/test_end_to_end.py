@@ -387,3 +387,108 @@ print(v3)
         out = buf.getvalue()
         assert '3628800' in out   # factorial(10)
         assert '5.0' in out       # KE derivative at v=5
+
+
+# ---------------------------------------------------------------------------
+# v2 Features
+# ---------------------------------------------------------------------------
+
+class TestFStrings:
+    def test_basic_interpolation(self):
+        src = 'var name = "Vect"\nprint(f"Hello, {name}!")'
+        assert run(src) == 'Hello, Vect!'
+
+    def test_int_interpolation(self):
+        src = 'var x = 42\nprint(f"Answer: {x}")'
+        assert run(src) == 'Answer: 42'
+
+    def test_expr_interpolation(self):
+        src = 'var x = 5\nprint(f"Double: {x * 2}")'
+        assert run(src) == 'Double: 10'
+
+    def test_multi_interp(self):
+        src = 'var a = 3\nvar b = 4\nprint(f"{a} + {b} = {a + b}")'
+        assert run(src) == '3 + 4 = 7'
+
+
+class TestVecMatStdlib:
+    def test_norm(self):
+        src = 'var v = [3.0, 4.0, 0.0]\nprint(norm(v))'
+        assert run(src) == '5.0'
+
+    def test_cross(self):
+        src = 'var a = [1.0,0.0,0.0]\nvar b = [0.0,1.0,0.0]\nprint(cross(a,b))'
+        out = run(src)
+        assert '0' in out and '1' in out
+
+    def test_normalize(self):
+        src = 'var v = [3.0, 4.0, 0.0]\nvar u = normalize(v)\nprint(norm(u))'
+        out = run(src)
+        assert '1' in out
+
+    def test_det(self):
+        src = 'var A = [[1.0,2.0],[3.0,4.0]]\nprint(det(A))'
+        assert run(src) == '-2.0'
+
+    def test_zeros(self):
+        src = 'print(zeros(3))'
+        out = run(src)
+        assert '0' in out
+
+    def test_ones(self):
+        src = 'print(ones(3))'
+        out = run(src)
+        assert '1' in out
+
+    def test_inv(self):
+        src = 'var A = [[1.0,2.0],[3.0,4.0]]\nvar B = inv(A)\nprint(det(B))'
+        out = run(src)
+        # det(inv(A)) = 1/det(A) = -0.5
+        assert '-0.5' in out
+
+    def test_solve(self):
+        src = 'var A = [[2.0,1.0],[1.0,3.0]]\nvar b = [5.0,10.0]\nvar x = solve(A,b)\nprint(x[0])'
+        out = run(src)
+        assert '1' in out
+
+
+class TestSymbolicIntegration:
+    def test_definite_integral(self):
+        # integral of x^2 from 0 to 3 = 9
+        src = '''
+sym f(x) = x**2
+var area = integral(f(x), "x", 0.0, 3.0)
+print(area)
+'''
+        assert run(src) == '9.0'
+
+    def test_definite_integral_work(self):
+        # integral of (2x+1) from 0 to 5 = 30
+        src = '''
+sym force(x) = 2.0*x + 1.0
+var work = integral(force(x), "x", 0.0, 5.0)
+print(work)
+'''
+        assert run(src) == '30.0'
+
+    def test_indefinite_integral(self):
+        src = '''
+sym f(x) = x**2
+var F = integral(f(x), "x")
+print(eval(F, x=3.0))
+'''
+        out = run(src)
+        assert '9' in out
+
+
+class TestPlot:
+    def test_plot_creates_file(self):
+        import os
+        src = '''
+sym f(x) = x**2
+plot(f(x), x, -2.0, 2.0, "Test Plot")
+print("done")
+'''
+        out = run(src)
+        assert 'done' in out            # program completed
+        assert os.path.exists('vect_plot.png')  # PNG was saved

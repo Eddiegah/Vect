@@ -2,3 +2,4 @@ llvmlite==0.43.0
 sympy==1.13.1
 click==8.1.7
 pytest==8.2.2
+matplotlib>=3.7.0

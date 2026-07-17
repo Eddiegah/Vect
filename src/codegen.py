@@ -119,9 +119,11 @@ def _declare_runtime_functions(module: ir.Module) -> Dict[str, ir.Function]:
     decl('vect_mat_transpose', PTR_T, PTR_T)
     decl('vect_mat_scale',    PTR_T,  PTR_T, FLOAT_T)
 
-    # Symbolic math (returns a string representation; eval returns float)
-    decl('vect_sym_diff',     PTR_T,  PTR_T, PTR_T)   # (expr_str, var_str) → sym_str
-    decl('vect_sym_eval',     FLOAT_T, PTR_T, PTR_T, FLOAT_T)  # (sym_str, var, val)
+    # Symbolic math
+    decl('vect_sym_diff',               PTR_T,   PTR_T, PTR_T)
+    decl('vect_sym_eval',               FLOAT_T, PTR_T, PTR_T, FLOAT_T)
+    decl('vect_sym_integrate',          PTR_T,   PTR_T, PTR_T)
+    decl('vect_sym_integrate_definite', FLOAT_T, PTR_T, PTR_T, FLOAT_T, FLOAT_T)
 
     # Math builtins
     decl('vect_sqrt',  FLOAT_T, FLOAT_T)
@@ -139,6 +141,20 @@ def _declare_runtime_functions(module: ir.Module) -> Dict[str, ir.Function]:
 
     # Range
     decl('vect_range',       PTR_T, INT_T, INT_T, INT_T)  # (start, stop, step)
+
+    # Vec/Mat stdlib (v2)
+    decl('vect_vec_norm',      FLOAT_T, PTR_T)
+    decl('vect_vec_cross',     PTR_T,   PTR_T, PTR_T)
+    decl('vect_vec_normalize', PTR_T,   PTR_T)
+    decl('vect_mat_det',       FLOAT_T, PTR_T)
+    decl('vect_mat_inv',       PTR_T,   PTR_T)
+    decl('vect_mat_solve',     PTR_T,   PTR_T, PTR_T)
+    decl('vect_zeros',         PTR_T,   INT_T)
+    decl('vect_ones',          PTR_T,   INT_T)
+
+    # Plot (v2)
+    decl('vect_plot_sym', I32_T, PTR_T, PTR_T, FLOAT_T, FLOAT_T, PTR_T)
+    decl('vect_plot_vec', I32_T, PTR_T, PTR_T, PTR_T)
 
     return fns
 
@@ -830,6 +846,54 @@ class CodeGen:
     def _compile_call(self, node: FuncCall) -> ir.Value:
         """Compile function calls — both built-ins and user-defined."""
         name = node.name
+
+        # --- integral must be handled BEFORE args are compiled ---
+        # because its first arg contains unbound symbolic variables
+        if name == 'integral':
+            expr_str = self._ast_to_sym_string(node.args[0], [])
+            expr_ptr = self._string_const(expr_str)
+            var_arg = node.args[1]
+            if isinstance(var_arg, Identifier):
+                var_ptr = self._string_const(var_arg.name)
+            elif isinstance(var_arg, StringLiteral):
+                var_ptr = self._string_const(var_arg.value)
+            else:
+                var_ptr = self._compile_expr(var_arg)
+            if len(node.args) == 2:
+                return self.builder.call(
+                    self.rt['vect_sym_integrate'], [expr_ptr, var_ptr])
+            else:
+                lo = self._coerce(self._compile_expr(node.args[2]), FLOAT_T)
+                hi = self._coerce(self._compile_expr(node.args[3]), FLOAT_T)
+                return self.builder.call(
+                    self.rt['vect_sym_integrate_definite'],
+                    [expr_ptr, var_ptr, lo, hi])
+
+        # --- plot — also before args, sym expr contains unbound vars ---
+        if name == 'plot':
+            expr_str = self._ast_to_sym_string(node.args[0], [])
+            expr_ptr = self._string_const(expr_str)
+            var_arg  = node.args[1]
+            var_ptr  = self._string_const(
+                var_arg.name if isinstance(var_arg, Identifier) else 'x')
+            lo = self._coerce(self._compile_expr(node.args[2]), FLOAT_T)
+            hi = self._coerce(self._compile_expr(node.args[3]), FLOAT_T)
+            title_ptr = self._string_const(
+                node.args[4].value if len(node.args) >= 5
+                and isinstance(node.args[4], StringLiteral) else '')
+            return self.builder.call(
+                self.rt['vect_plot_sym'],
+                [expr_ptr, var_ptr, lo, hi, title_ptr])
+
+        if name == 'plot_xy':
+            x_vec = self._compile_expr(node.args[0])
+            y_vec = self._compile_expr(node.args[1])
+            title_ptr = self._string_const(
+                node.args[2].value if len(node.args) >= 3
+                and isinstance(node.args[2], StringLiteral) else '')
+            return self.builder.call(
+                self.rt['vect_plot_vec'], [x_vec, y_vec, title_ptr])
+
         args = [self._compile_expr(a) for a in node.args]
 
         # --- print ---
@@ -892,6 +956,52 @@ class CodeGen:
                 stop  = self._coerce(args[1], INT_T)
                 step  = self._coerce(args[2], INT_T)
             return self.builder.call(self.rt['vect_range'], [start, stop, step])
+
+        # --- vec/mat stdlib (v2) ---
+        if name == 'norm':
+            return self.builder.call(self.rt['vect_vec_norm'], [args[0]])
+        if name == 'cross':
+            return self.builder.call(self.rt['vect_vec_cross'], [args[0], args[1]])
+        if name == 'normalize':
+            return self.builder.call(self.rt['vect_vec_normalize'], [args[0]])
+        if name == 'det':
+            return self.builder.call(self.rt['vect_mat_det'], [args[0]])
+        if name == 'inv':
+            return self.builder.call(self.rt['vect_mat_inv'], [args[0]])
+        if name == 'solve':
+            return self.builder.call(self.rt['vect_mat_solve'], [args[0], args[1]])
+        if name == 'zeros':
+            n = self._coerce(args[0], INT_T)
+            return self.builder.call(self.rt['vect_zeros'], [n])
+        if name == 'ones':
+            n = self._coerce(args[0], INT_T)
+            return self.builder.call(self.rt['vect_ones'], [n])
+
+        # --- symbolic integration ---
+        # integral(expr, "var")           → symbolic antiderivative (sym)
+        # integral(expr, "var", lo, hi)   → definite integral (float)
+        if name == 'integral':
+            # Build the expression string from the first argument AST
+            # without compiling it (it may contain unbound symbolic vars)
+            expr_str = self._ast_to_sym_string(node.args[0], [])
+            expr_ptr = self._string_const(expr_str)
+            # Second arg is the variable name
+            var_arg = node.args[1]
+            if isinstance(var_arg, Identifier):
+                var_ptr = self._string_const(var_arg.name)
+            elif isinstance(var_arg, StringLiteral):
+                var_ptr = self._string_const(var_arg.value)
+            else:
+                var_ptr = self._compile_expr(var_arg)
+            if len(node.args) == 2:
+                return self.builder.call(
+                    self.rt['vect_sym_integrate'], [expr_ptr, var_ptr])
+            else:
+                lo = self._coerce(self._compile_expr(node.args[2]), FLOAT_T)
+                hi = self._coerce(self._compile_expr(node.args[3]), FLOAT_T)
+                return self.builder.call(
+                    self.rt['vect_sym_integrate_definite'],
+                    [expr_ptr, var_ptr, lo, hi])
 
         # --- user-defined function ---
         if name in self.user_fns:
@@ -996,6 +1106,10 @@ class CodeGen:
                 'int': INT, 'float': FLOAT, 'str': STRING,
                 'range': VEC, 'transpose': MAT, 'dot': FLOAT,
                 'zeros': VEC, 'ones': VEC,
+                # v2 stdlib
+                'norm': FLOAT, 'cross': VEC, 'normalize': VEC,
+                'det': FLOAT, 'inv': MAT, 'solve': VEC,
+                'integral': SYM, 'plot': VOID,
             }
             if name in builtin_returns:
                 return builtin_returns[name]

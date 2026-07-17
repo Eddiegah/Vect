@@ -107,6 +107,7 @@ _TOKEN_SPEC = [
     # Literals
     ('FLOAT',       r'\d+\.\d*([eE][+-]?\d+)?|\.\d+([eE][+-]?\d+)?'),
     ('INT',         r'\d+'),
+    ('FSTRING',     r'f"(?:[^"\\]|\\.)*"'),  # f-string: f"Hello {name}!"
     ('STRING',      r'"(?:[^"\\]|\\.)*"'),   # double-quoted strings
 
     # Identifiers / keywords
@@ -123,6 +124,94 @@ _MASTER_RE = re.compile(
     '|'.join(f'(?P<{name}>{pattern})' for name, pattern in _TOKEN_SPEC),
     re.UNICODE
 )
+
+
+# ---------------------------------------------------------------------------
+# F-string expansion
+# ---------------------------------------------------------------------------
+
+def _expand_fstring(raw: str, line: int, col: int) -> List[Token]:
+    """
+    Expand an f-string like  f"Hello {name}, score is {score + 1}"
+    into a sequence of tokens:
+        STRING("Hello ") PLUS IDENT(name) PLUS STRING(", score is ") PLUS ...
+
+    Strategy:
+      1. Strip the leading f" and trailing "
+      2. Walk the content, splitting on { ... } blocks
+      3. Each literal segment → STRING token
+      4. Each { expr } block → tokenize the inner expression
+      5. Join with PLUS tokens
+    """
+    # Strip f" prefix and closing "
+    inner = raw[2:-1]  # remove f" and "
+
+    parts = []          # list of token lists
+    buf = []            # current literal characters
+    i = 0
+
+    while i < len(inner):
+        ch = inner[i]
+        if ch == '{':
+            # Save any literal collected so far
+            if buf:
+                literal = ''.join(buf)
+                # unescape
+                literal = literal.replace('\\n', '\n').replace('\\t', '\t')
+                literal = literal.replace('\\"', '"').replace('\\\\', '\\')
+                parts.append([Token('STRING', literal, line, col)])
+                buf = []
+            # Find matching }
+            depth = 1
+            j = i + 1
+            while j < len(inner) and depth > 0:
+                if inner[j] == '{': depth += 1
+                elif inner[j] == '}': depth -= 1
+                j += 1
+            expr_src = inner[i+1:j-1].strip()
+            # Tokenize the expression inside {}
+            try:
+                expr_tokens = [t for t in tokenize(expr_src)
+                               if t.type not in ('EOF', 'NEWLINE')]
+            except LexError:
+                expr_tokens = [Token('IDENT', expr_src, line, col)]
+            parts.append(expr_tokens)
+            i = j
+        elif ch == '\\' and i + 1 < len(inner):
+            buf.append(ch)
+            buf.append(inner[i+1])
+            i += 2
+        else:
+            buf.append(ch)
+            i += 1
+
+    # Remaining literal
+    if buf:
+        literal = ''.join(buf)
+        literal = literal.replace('\\n', '\n').replace('\\t', '\t')
+        literal = literal.replace('\\"', '"').replace('\\\\', '\\')
+        parts.append([Token('STRING', literal, line, col)])
+
+    if not parts:
+        return [Token('STRING', '', line, col)]
+
+    # Wrap each expression part in str(...) call tokens so types convert cleanly
+    # str ( expr ) — this ensures ints/floats print as strings in concat
+    result = []
+    for idx, part in enumerate(parts):
+        if idx > 0:
+            result.append(Token('PLUS', '+', line, col))
+        # If this part is a string literal already, emit as-is
+        if len(part) == 1 and part[0].type == 'STRING':
+            result.extend(part)
+        else:
+            # Wrap in str(): str ( <expr tokens> )
+            result.append(Token('IDENT', 'str', line, col))
+            result.append(Token('LPAREN', '(', line, col))
+            result.extend(part)
+            result.append(Token('RPAREN', ')', line, col))
+
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -172,6 +261,13 @@ def tokenize(source: str) -> List[Token]:
                 f"Unexpected character {value!r}",
                 line, col
             )
+
+        elif kind == 'FSTRING':
+            # Expand f"..." into STRING + PLUS + str(expr) + PLUS + ... tokens
+            expanded = _expand_fstring(value, line, col)
+            tokens.extend(expanded)
+            last_meaningful = 'RPAREN'  # ends like a call expression
+            continue
 
         elif kind == 'STRING':
             # Strip surrounding quotes and process escape sequences

@@ -1,0 +1,31 @@
+# v2 stdlib test
+
+# norm — magnitude of a vector
+var v = [3.0, 4.0, 0.0]
+print(norm(v))           # 5.0
+
+# cross product
+var a = [1.0, 0.0, 0.0]
+var b = [0.0, 1.0, 0.0]
+print(cross(a, b))       # [0, 0, 1]
+
+# normalize
+var u = normalize(v)
+print(u)                 # [0.6, 0.8, 0]
+
+# zeros and ones
+print(zeros(4))          # [0, 0, 0, 0]
+print(ones(3))           # [1, 1, 1]
+
+# determinant
+var A = [[1.0, 2.0], [3.0, 4.0]]
+print(det(A))            # -2.0
+
+# inverse
+var Ainv = inv(A)
+print(Ainv)              # [[-2, 1], [1.5, -0.5]]
+
+# solve Ax = b
+var b2 = [1.0, 0.0]
+var x = solve(A, b2)
+print(x)                 # [-2, 1.5]

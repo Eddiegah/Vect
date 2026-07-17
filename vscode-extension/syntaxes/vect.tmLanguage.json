@@ -6,6 +6,9 @@
       "include": "#comments"
     },
     {
+      "include": "#fstrings"
+    },
+    {
       "include": "#strings"
     },
     {
@@ -38,6 +41,27 @@
       "name": "comment.line.number-sign.vect",
       "match": "#.*$"
     },
+    "fstrings": {
+      "name": "string.interpolated.vect",
+      "begin": "f\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "meta.embedded.vect",
+          "begin": "\\{",
+          "end": "\\}",
+          "patterns": [
+            {
+              "include": "$self"
+            }
+          ]
+        },
+        {
+          "name": "constant.character.escape.vect",
+          "match": "\\\\."
+        }
+      ]
+    },
     "strings": {
       "name": "string.quoted.double.vect",
       "begin": "\"",
@@ -62,6 +86,10 @@
         {
           "name": "support.function.eval.vect",
           "match": "\\beval\\b"
+        },
+        {
+          "name": "keyword.operator.integral.vect",
+          "match": "\\bintegral\\b"
         }
       ]
     },
@@ -91,7 +119,7 @@
     },
     "builtins": {
       "name": "support.function.builtin.vect",
-      "match": "\\b(print|input|len|sqrt|sin|cos|tan|abs|floor|ceil|range|str|eval|T)\\b"
+      "match": "\\b(print|input|len|sqrt|sin|cos|tan|abs|floor|ceil|range|str|eval|T|norm|cross|dot|det|inv|solve|zeros|ones|plot|integral)\\b"
     },
     "numbers": {
       "patterns": [

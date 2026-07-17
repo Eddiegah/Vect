@@ -1,0 +1,10 @@
+# f-string test
+var name  = "Eddie"
+var score = 95
+var pi    = 3.14159
+
+print(f"Hello, {name}!")
+print(f"Score: {score}")
+print(f"Pi is approximately {pi}")
+print(f"Double score: {score * 2}")
+print(f"{name} scored {score} points — grade A!")
