@@ -18,6 +18,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9%E2%80%933.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![LLVM](https://img.shields.io/badge/LLVM-Native%20Codegen-262D3A?style=for-the-badge&logo=llvm&logoColor=white)](https://llvm.org)
 [![Tests](https://img.shields.io/badge/Tests-138%20Passing-00C853?style=for-the-badge&logo=pytest&logoColor=white)](./tests)
+[![CI](https://github.com/Eddiegah/Vect/actions/workflows/test.yml/badge.svg)](https://github.com/Eddiegah/Vect/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/License-MIT-FF6F00?style=for-the-badge)](./LICENSE)
 [![Version](https://img.shields.io/badge/Version-0.1.0-7C4DFF?style=for-the-badge)](https://github.com/Eddiegah/Vect)
 
@@ -27,6 +28,9 @@
 > **Vect builds it into the grammar itself."**
 
 <br/>
+
+<!-- Demo GIF — record using: python scripts/record_demo.py -->
+<!-- After recording, replace the line below with: <img src="docs/demo.gif" alt="Vect REPL demo" width="720"/> -->
 
 [**⚡ Quickstart**](#-quickstart) · [**🗺 Language Tour**](#-language-tour) · [**🏗 How It Works**](#%EF%B8%8F-how-the-compiler-works) · [**📦 Install**](#-installation) · [**🧪 Tests**](#-tests)
 

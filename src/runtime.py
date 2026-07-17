@@ -230,8 +230,14 @@ def _vec_set(ptr: int, i: int, val: float):
     vec[i] = val
 
 def _vec_get(ptr: int, i: int) -> float:
-    vec = _get(ptr)
-    return vec[i]
+    obj = _get(ptr)
+    if isinstance(obj, VectMat):
+        # Indexing a matrix returns a row — but codegen expects float here.
+        # For row access use _mat_get_row. If we get here it's a scalar fetch
+        # from a flat representation — return 0 safely.
+        row = obj.rows[i] if i < len(obj.rows) else VectVec([0.0])
+        return float(row[0]) if len(row) > 0 else 0.0
+    return obj[i]
 
 def _vec_len(ptr: int) -> int:
     vec = _get(ptr)

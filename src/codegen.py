@@ -745,8 +745,16 @@ class CodeGen:
         raise CodegenError(f"Unknown operator '{op}'", node.line, node.col)
 
     def _compile_ptr_binop(self, op, left, right, node):
-        """Handle operations where one or both operands are pointers (vec/mat)."""
+        """Handle operations where one or both operands are pointers (vec/mat/string)."""
         rt = self.rt
+
+        # Determine Vect-level types so we can distinguish string from vec/mat
+        left_vt  = self._vect_type_of(node.left)
+        right_vt = self._vect_type_of(node.right)
+
+        # string + string concatenation — must check BEFORE vec ops
+        if op == '+' and (left_vt == STRING or right_vt == STRING):
+            return self.builder.call(rt['vect_str_concat'], [left, right])
 
         # vec op vec
         if left.type == PTR_T and right.type == PTR_T:
@@ -760,18 +768,11 @@ class CodeGen:
         if left.type == PTR_T and right.type in (INT_T, FLOAT_T):
             scalar = self._coerce(right, FLOAT_T)
             if op == '*': return self.builder.call(rt['vect_vec_scale'], [left, scalar])
-            if op == '+':
-                # scalar broadcast add — not in core runtime, but let's handle gracefully
-                raise CodegenError(
-                    "Adding a scalar to a vector is not supported. "
-                    "Use element-wise addition with two vectors.",
-                    node.line, node.col
-                )
         if left.type in (INT_T, FLOAT_T) and right.type == PTR_T:
             scalar = self._coerce(left, FLOAT_T)
             if op == '*': return self.builder.call(rt['vect_vec_scale'], [right, scalar])
 
-        # string + string  (both are i8*)
+        # fallback string concat
         if op == '+':
             return self.builder.call(rt['vect_str_concat'], [left, right])
 

@@ -1,0 +1,48 @@
+# TOUR 6 — Symbolic Differentiation
+# d/dx is a real language operator. sym defines a symbolic function.
+# eval() evaluates the result at a specific point.
+
+# ── Polynomial ──────────────────────────────────────────────
+sym f(x) = x**2 + 3*x + 1
+
+var df = d/dx(f(x))
+print(df)                    # 2*x + 3
+
+print(eval(df, x=0.0))       # 3.0  (y-intercept of slope)
+print(eval(df, x=2.0))       # 7.0  (slope at x=2)
+print(eval(df, x=-1.5))      # 0.0  (minimum of parabola)
+
+# ── Cubic — find critical points ────────────────────────────
+sym g(x) = x**3 - 6*x**2 + 9*x
+
+var dg = d/dx(g(x))
+print(dg)                    # 3*x**2 - 12*x + 9
+
+print(eval(dg, x=1.0))       # 0.0  local maximum
+print(eval(dg, x=3.0))       # 0.0  local minimum
+
+# ── Physics: Free fall ───────────────────────────────────────
+sym height(t) = 20.0*t - 4.9*t**2
+
+var velocity = d/dt(height(t))
+print(velocity)              # 20.0 - 9.8*t
+
+print(eval(velocity, t=0.0)) # 20.0  launch speed (m/s)
+print(eval(velocity, t=2.0)) # 0.4   nearly at peak
+print(eval(velocity, t=4.0)) # -19.2 falling back down
+
+# ── Physics: Kinetic energy ──────────────────────────────────
+sym KE(v) = 0.5 * 5.0 * v**2   # mass = 5kg
+
+var momentum = d/dv(KE(v))
+print(momentum)              # 5.0*v  (that IS momentum: p = mv)
+
+print(eval(momentum, v=2.0)) # 10.0 kg·m/s
+print(eval(momentum, v=10.0))# 50.0 kg·m/s
+
+# ── Geometry: Circle area ────────────────────────────────────
+sym area(r) = 3.14159 * r**2
+
+var circumference = d/dr(area(r))
+print(circumference)         # 6.28318*r  (that IS circumference: 2πr)
+print(eval(circumference, r=5.0)) # 31.4159

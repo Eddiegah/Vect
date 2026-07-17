@@ -1,0 +1,43 @@
+# TOUR 2 — Control Flow
+
+# if / else if / else
+var temp = 38.5
+if temp > 39.0 {
+    print("High fever")
+} else if temp > 37.5 {
+    print("Mild fever")
+} else {
+    print("Normal")
+}
+
+# while loop — count up
+var i = 1
+var product = 1
+while i <= 5 {
+    product = product * i
+    i = i + 1
+}
+print(product)     # 120  (5 factorial)
+
+# for loop over a vector
+var total = 0.0
+for score in [88.0, 92.0, 79.0, 95.0, 84.0] {
+    total = total + score
+}
+print(total / 5.0) # 87.6 (average)
+
+# break
+var n = 0
+while true {
+    n = n + 1
+    if n * n > 50 { break }
+}
+print(n)           # 8  (first n where n² > 50)
+
+# continue — print only odd numbers
+var x = 0
+while x < 10 {
+    x = x + 1
+    if x % 2 == 0 { continue }
+    print(x)       # 1 3 5 7 9
+}

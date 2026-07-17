@@ -1,0 +1,24 @@
+# TOUR 1 — Variables & Arithmetic
+# Every basic thing Vect can do with numbers
+
+var a = 10
+var b = 3
+
+print(a + b)       # 13
+print(a - b)       # 7
+print(a * b)       # 30
+print(a / b)       # 3
+print(a % b)       # 1  (remainder)
+print(a ** 2)      # 100 (power)
+
+# Floats
+var pi = 3.14159
+var r  = 5.0
+print(pi * r * r)  # 78.5397...
+
+# Mixed int and float — Vect promotes automatically
+print(7 + 1.5)     # 8.5
+
+# Parentheses control order
+print(2 + 3 * 4)   # 14  (not 20)
+print((2 + 3) * 4) # 20

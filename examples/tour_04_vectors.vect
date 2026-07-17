@@ -1,0 +1,40 @@
+# TOUR 4 — Native Vectors
+# No imports. [1,2,3] is a literal, like 42 or "hello".
+
+var v1 = [1.0, 2.0, 3.0]
+var v2 = [4.0, 5.0, 6.0]
+
+# Element-wise operations
+print(v1 + v2)      # [5, 7, 9]
+print(v1 - v2)      # [-3, -3, -3]
+print(v1 * v2)      # [4, 10, 18]
+
+# Scalar multiply
+print(v1 * 10.0)    # [10, 20, 30]
+
+# Dot product — the · operator (middle dot)
+print(v1 · v2)      # 32.0  (1×4 + 2×5 + 3×6)
+
+# Indexing — zero-based
+print(v1[0])        # 1.0
+print(v1[2])        # 3.0
+
+# Length
+print(len(v1))      # 3
+
+# Modify an element
+v1[1] = 99.0
+print(v1)           # [1, 99, 3]
+
+# Iterate
+var total = 0.0
+for x in [10.0, 20.0, 30.0, 40.0, 50.0] {
+    total = total + x
+}
+print(total)        # 150.0
+
+# Real-world: force and displacement vectors
+var force        = [3.0, 0.0, 4.0]
+var displacement = [1.0, 5.0, 2.0]
+var work = force · displacement
+print(work)         # 11.0  (F·d = work done)

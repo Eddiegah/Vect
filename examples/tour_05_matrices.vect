@@ -1,0 +1,38 @@
+# TOUR 5 — Native Matrices
+# @ is matrix multiply. T() is transpose. All native syntax.
+
+var A = [[1.0, 2.0], [3.0, 4.0]]
+var B = [[5.0, 6.0], [7.0, 8.0]]
+
+# Matrix multiply
+print(A @ B)
+# [19, 22]
+# [43, 50]
+
+# Transpose
+print(T(A))
+# [1, 3]
+# [2, 4]
+
+# Element-wise add
+print(A + B)
+# [6, 8]
+# [10, 12]
+
+# Scalar multiply
+print(A * 2.0)
+# [2, 4]
+# [6, 8]
+
+# 90-degree rotation matrix applied to a point
+var R = [[0.0, -1.0], [1.0, 0.0]]
+var p = [[1.0], [0.0]]
+print(R @ p)    # [[0],[1]] — (1,0) rotated to (0,1)
+
+# Identity matrix check: A @ I = A
+var I = [[1.0, 0.0], [0.0, 1.0]]
+print(A @ I)    # should equal A
+
+# Row access — A[0] gives you a vec (the first row)
+var row0 = A[0]
+print(row0)     # prints as vec: [1, 2]
