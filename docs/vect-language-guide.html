@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vect Language — Complete Guide</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    color: #1a1a2e;
+    background: #fff;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  /* ── Typography ── */
+  h1 { font-size: 2.6rem; font-weight: 800; color: #0d0d2b; letter-spacing: -1px; margin-bottom: 6px; }
+  h2 { font-size: 1.65rem; font-weight: 700; color: #16213e; margin: 52px 0 14px; padding-bottom: 8px;
+       border-bottom: 3px solid #e8e8f0; }
+  h3 { font-size: 1.2rem; font-weight: 700; color: #0f3460; margin: 32px 0 10px; }
+  h4 { font-size: 1rem; font-weight: 700; color: #533483; margin: 22px 0 6px; }
+  p  { margin-bottom: 14px; }
+
+  a  { color: #0f3460; text-decoration: none; border-bottom: 1px solid #c0cfe0; }
+
+  /* ── Cover page ── */
+  .cover {
+    text-align: center;
+    padding: 60px 0 50px;
+    border-bottom: 4px solid #0f3460;
+    margin-bottom: 50px;
+  }
+  .cover .logo {
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: #0f3460;
+    background: #f0f4ff;
+    display: inline-block;
+    padding: 20px 30px;
+    border-radius: 10px;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+  }
+  .cover h1 { font-size: 2.9rem; margin-bottom: 8px; }
+  .cover .subtitle { font-size: 1.15rem; color: #555; margin-bottom: 20px; font-style: italic; }
+  .cover .meta { font-size: 0.9rem; color: #888; }
+  .cover .meta span { display: inline-block; margin: 0 10px; }
+
+  /* ── Badge row ── */
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 18px 0; }
+  .badge {
+    padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-blue   { background: #e0eaff; color: #0f3460; }
+  .badge-green  { background: #e0f7ea; color: #1b5e20; }
+  .badge-orange { background: #fff3e0; color: #bf360c; }
+  .badge-purple { background: #f3e5f5; color: #4a148c; }
+
+  /* ── Table of contents ── */
+  .toc { background: #f8f9ff; border: 1px solid #dde3f5; border-radius: 10px;
+         padding: 24px 28px; margin: 0 0 50px; }
+  .toc h2 { border: none; margin-top: 0; font-size: 1.1rem; color: #333; margin-bottom: 12px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin: 5px 0; font-size: 0.93rem; color: #0f3460; }
+  .toc li a { border: none; }
+
+  /* ── Code blocks ── */
+  pre {
+    background: #0d1117;
+    color: #e6edf3;
+    border-radius: 10px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    margin: 14px 0 20px;
+    border-left: 4px solid #0f3460;
+  }
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+  p code, li code, td code {
+    background: #f0f4ff;
+    color: #0f3460;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.875em;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+
+  /* Syntax highlighting (manual) */
+  .kw  { color: #ff7b72; }   /* keywords */
+  .fn  { color: #d2a8ff; }   /* function names */
+  .str { color: #a5d6ff; }   /* strings */
+  .num { color: #79c0ff; }   /* numbers */
+  .cmt { color: #8b949e; font-style: italic; } /* comments */
+  .sym { color: #ffa657; }   /* symbolic / operators */
+  .typ { color: #56d364; }   /* types */
+  .var { color: #e6edf3; }   /* plain vars */
+  .op  { color: #ff7b72; }   /* operators */
+  .out { color: #8b949e; }   /* output lines */
+
+  /* ── Callout boxes ── */
+  .box {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 0.93rem;
+  }
+  .box-info  { background: #e8f4fd; border-left: 4px solid #1976d2; }
+  .box-tip   { background: #e8f5e9; border-left: 4px solid #388e3c; }
+  .box-warn  { background: #fff8e1; border-left: 4px solid #f57c00; }
+  .box-star  { background: #f3e5f5; border-left: 4px solid #7b1fa2; }
+  .box strong { display: block; margin-bottom: 4px; font-size: 0.85rem;
+                text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.9rem; }
+  th { background: #0f3460; color: white; padding: 10px 14px; text-align: left; font-weight: 600; }
+  td { padding: 9px 14px; border-bottom: 1px solid #eaeef5; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8f9ff; }
+
+  /* ── Section divider ── */
+  .divider { border: none; border-top: 2px dashed #dde3f5; margin: 48px 0; }
+
+  /* ── Comparison side-by-side ── */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+  .compare-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+                   letter-spacing: 1px; margin-bottom: 4px; }
+  .compare-bad  .compare-label { color: #c62828; }
+  .compare-good .compare-label { color: #2e7d32; }
+  .compare pre { margin: 0; border-left-color: #888; }
+  .compare-good pre { border-left-color: #388e3c; }
+  .compare-bad  pre { border-left-color: #c62828; }
+
+  /* ── Pipeline diagram ── */
+  .pipeline {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    background: #f8f9ff;
+    border: 1px solid #dde3f5;
+    border-radius: 10px;
+    padding: 24px;
+    line-height: 1.8;
+    color: #0d1117;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 20px 30px; font-size: 13px; }
+    h2 { page-break-before: auto; }
+    pre { font-size: 0.78rem; }
+    .cover { page-break-after: always; }
+    .toc   { page-break-after: always; }
+    h2     { page-break-after: avoid; }
+    pre, table { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="logo">
+██╗   ██╗███████╗ ██████╗████████╗
+██║   ██║██╔════╝██╔════╝╚══██╔══╝
+██║   ██║█████╗  ██║        ██║
+╚██╗ ██╔╝██╔══╝  ██║        ██║
+ ╚████╔╝ ███████╗╚██████╗   ██║
+  ╚═══╝  ╚══════╝ ╚═════╝   ╚═╝</div>
+  <h1>The Vect Language Guide</h1>
+  <p class="subtitle">A compiled language where scientific computing is syntax, not a library</p>
+  <div class="badges">
+    <span class="badge badge-blue">Version 0.1.0</span>
+    <span class="badge badge-green">138 Tests Passing</span>
+    <span class="badge badge-orange">Python 3.9 – 3.12</span>
+    <span class="badge badge-purple">LLVM Native Codegen</span>
+  </div>
+  <p class="meta">
+    <span>By Eddie</span>
+    <span>·</span>
+    <span>github.com/Eddiegah/Vect</span>
+    <span>·</span>
+    <span>2025</span>
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ TOC -->
+<div class="toc">
+  <h2>📋 Table of Contents</h2>
+  <ol>
+    <li><a href="#s1">What is Vect?</a></li>
+    <li><a href="#s2">Installation &amp; Setup</a></li>
+    <li><a href="#s3">Your First Vect Program</a></li>
+    <li><a href="#s4">The REPL — Interactive Mode</a></li>
+    <li><a href="#s5">Variables &amp; Types</a></li>
+    <li><a href="#s6">Operators &amp; Arithmetic</a></li>
+    <li><a href="#s7">Control Flow — if, while, for</a></li>
+    <li><a href="#s8">Functions</a></li>
+    <li><a href="#s9">Vectors — Native First-Class Values</a></li>
+    <li><a href="#s10">Matrices — Native First-Class Values</a></li>
+    <li><a href="#s11">Symbolic Differentiation — The Headline Feature</a></li>
+    <li><a href="#s12">Built-in Functions</a></li>
+    <li><a href="#s13">String Operations</a></li>
+    <li><a href="#s14">Type System &amp; Error Messages</a></li>
+    <li><a href="#s15">CLI Reference</a></li>
+    <li><a href="#s16">Complete Example Programs</a></li>
+    <li><a href="#s17">How the Compiler Works</a></li>
+    <li><a href="#s18">Quick Reference Card</a></li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ S1 -->
+<h2 id="s1">1. What is Vect?</h2>
+
+<p>Vect is a <strong>compiled programming language</strong> designed around a single idea: scientific computing should be part of the language itself, not something you bolt on with library imports.</p>
+
+<p>In Python you write:</p>
+<pre><code><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> sympy <span class="kw">as</span> sp
+
+v = np.array([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>])
+x = sp.Symbol(<span class="str">'x'</span>)
+f = x**<span class="num">2</span> + <span class="num">3</span>*x
+df = sp.diff(f, x)
+<span class="fn">print</span>(float(df.subs(x, <span class="num">2</span>)))</code></pre>
+
+<p>In Vect you write:</p>
+<pre><code><span class="kw">var</span> v = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
+
+<span class="sym">sym</span> f(x) = x**<span class="num">2</span> + <span class="num">3</span>*x
+<span class="fn">print</span>(<span class="fn">eval</span>(<span class="sym">d/dx</span>(f(x)), x=<span class="num">2.0</span>))  <span class="cmt"># → 7.0</span></code></pre>
+
+<p><code>d/dx</code> is not a function call — it is a <strong>language operator</strong>, like <code>+</code> or <code>*</code>. <code>[1, 2, 3]</code> is a vector literal, as native as the number <code>42</code>. There are no imports. No library names. Just the language.</p>
+
+<div class="box box-info">
+  <strong>Key fact</strong>
+  Vect compiles to real native machine code via LLVM — the same compiler backend used by Clang, Rust, and Swift. It is not an interpreter and not a transpiler. Your program becomes actual x86-64 binary instructions.
+</div>
+
+<h3>Who is Vect for?</h3>
+<ul>
+  <li>Anyone curious about how programming languages and compilers work</li>
+  <li>Students who want to see scientific computing treated as a first-class citizen</li>
+  <li>Developers who want to explore a clean, readable language with minimal boilerplate</li>
+  <li>Anyone who has ever wondered what it would feel like if <code>d/dx</code> was just… syntax</li>
+</ul>
+
+<h3>What can Vect do right now?</h3>
+<table>
+  <tr><th>Feature</th><th>Status</th></tr>
+  <tr><td>Variables, arithmetic, comparisons, logic</td><td>✅ Full support</td></tr>
+  <tr><td>if / else if / else, while, for, break, continue</td><td>✅ Full support</td></tr>
+  <tr><td>Functions with parameters, return types, recursion</td><td>✅ Full support</td></tr>
+  <tr><td>Native vector literals and operations</td><td>✅ Full support</td></tr>
+  <tr><td>Native matrix literals and operations</td><td>✅ Full support</td></tr>
+  <tr><td>Symbolic differentiation with d/dx</td><td>✅ Full support</td></tr>
+  <tr><td>Interactive REPL</td><td>✅ Full support</td></tr>
+  <tr><td>Static type checker with helpful errors</td><td>✅ Full support</td></tr>
+  <tr><td>VS Code syntax highlighting</td><td>✅ Included</td></tr>
+  <tr><td>Multi-file imports</td><td>🔲 Future work</td></tr>
+</table>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S2 -->
+<h2 id="s2">2. Installation &amp; Setup</h2>
+
+<div class="box box-warn">
+  <strong>Before you start</strong>
+  Vect requires Python 3.9–3.12. Python 3.13 and above are <strong>not</strong> yet supported because <code>llvmlite 0.43.0</code> does not support them. Python 3.11 is the recommended version. No C++ compiler, no Visual Studio, and no CMake are needed.
+</div>
+
+<h3>Step 1 — Check your Python version</h3>
+<pre><code><span class="cmt"># Windows</span>
+py -0
+
+<span class="cmt"># macOS / Linux</span>
+python3 --version</code></pre>
+
+<p>You need to see <code>3.9</code>, <code>3.10</code>, <code>3.11</code>, or <code>3.12</code>. If you only have 3.13+, install Python 3.11 from <strong>python.org</strong> alongside it.</p>
+
+<h3>Step 2 — Clone the repository</h3>
+<pre><code>git clone https://github.com/Eddiegah/Vect.git
+cd Vect</code></pre>
+
+<h3>Step 3 — Create a virtual environment</h3>
+<pre><code><span class="cmt"># Windows (recommended)</span>
+py -3.11 -m venv venv
+venv\Scripts\activate
+
+<span class="cmt"># macOS / Linux</span>
+python3.11 -m venv venv
+source venv/bin/activate</code></pre>
+
+<div class="box box-tip">
+  <strong>What is a virtual environment?</strong>
+  It is an isolated Python installation just for this project. It keeps Vect's dependencies separate from everything else on your machine. Always activate it before using <code>vect</code>.
+</div>
+
+<h3>Step 4 — Install dependencies</h3>
+<pre><code>pip install -r requirements.txt
+pip install -e .</code></pre>
+
+<p>This installs four packages:</p>
+<table>
+  <tr><th>Package</th><th>Version</th><th>What it does</th></tr>
+  <tr><td><code>llvmlite</code></td><td>0.43.0</td><td>Python bindings to LLVM — the JIT compiler engine</td></tr>
+  <tr><td><code>sympy</code></td><td>1.13.1</td><td>Symbolic math — powers the <code>d/dx</code> operator behind the scenes</td></tr>
+  <tr><td><code>click</code></td><td>8.1.7</td><td>CLI framework for the <code>vect</code> command</td></tr>
+  <tr><td><code>pytest</code></td><td>8.2.2</td><td>Test runner</td></tr>
+</table>
+
+<h3>Step 5 — Verify the installation</h3>
+<pre><code>python -c "import llvmlite.binding as llvm; llvm.initialize(); llvm.initialize_native_target(); llvm.initialize_native_asmprinter(); print('LLVM backend OK')"</code></pre>
+
+<p>You should see:</p>
+<pre><code><span class="out">LLVM backend OK</span></code></pre>
+
+<p>If you see an error here, it almost always means you used the wrong Python version. Run <code>python --version</code> inside your venv and confirm it shows 3.11.x.</p>
+
+<h3>Step 6 — Run your first program</h3>
+<pre><code><span class="cmt"># Windows</span>
+venv\Scripts\vect run examples\demo.vect
+
+<span class="cmt"># macOS / Linux</span>
+venv/bin/vect run examples/demo.vect</code></pre>
+
+<p>You should see output like:</p>
+<pre><code><span class="out">--- 1. Functions & Recursion ---
+55
+--- 2. Native Vectors ---
+[4, 1, 4, 2, 5]
+4.0
+--- 3. Matrix Multiply ---
+[
+  [0],
+  [1]
+]
+--- 4. Symbolic Differentiation ---
+3*x**2 - 4*x + 1
+0.0
+5.0
+Done.</span></code></pre>
+
+<div class="box box-tip">
+  <strong>Windows shortcut</strong>
+  Instead of steps 3–6, you can run the one-shot setup script from the project folder:<br/>
+  <code>.\setup_vect.ps1</code>
+</div>
+
+<h3>Install VS Code Syntax Highlighting (optional but recommended)</h3>
+<pre><code><span class="cmt"># Windows — run in PowerShell from the Vect project folder</span>
+Copy-Item -Recurse vscode-extension "$env:USERPROFILE\.vscode\extensions\vect-lang-0.1.0"
+
+<span class="cmt"># macOS / Linux</span>
+cp -r vscode-extension ~/.vscode/extensions/vect-lang-0.1.0</code></pre>
+
+<p>Restart VS Code, open any <code>.vect</code> file, and it will be coloured automatically.</p>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S3 -->
+<h2 id="s3">3. Your First Vect Program</h2>
+
+<p>Create a file called <code>hello.vect</code> anywhere on your computer and type this:</p>
+
+<pre><code><span class="cmt"># hello.vect — my first Vect program</span>
+
+<span class="fn">print</span>(<span class="str">"Hello from Vect!"</span>)
+
+<span class="kw">var</span> name = <span class="str">"Eddie"</span>
+<span class="fn">print</span>(<span class="str">"Written by: "</span> + name)
+
+<span class="kw">var</span> x = <span class="num">10</span>
+<span class="kw">var</span> y = <span class="num">3</span>
+<span class="fn">print</span>(x + y)   <span class="cmt"># 13</span>
+<span class="fn">print</span>(x * y)   <span class="cmt"># 30</span>
+<span class="fn">print</span>(x ** <span class="num">2</span>)  <span class="cmt"># 100 — x squared</span></code></pre>
+
+<p>Run it:</p>
+<pre><code>venv\Scripts\vect run hello.vect</code></pre>
+
+<p>Output:</p>
+<pre><code><span class="out">Hello from Vect!
+Written by: Eddie
+13
+30
+100</span></code></pre>
+
+<div class="box box-info">
+  <strong>Things to notice</strong>
+  Comments start with <code>#</code> and run to the end of the line. <code>print()</code> is a built-in that accepts any type — integers, floats, strings, booleans, vectors, or matrices. There are no semicolons. Newlines end statements.
+</div>
+
+<h3>Your second program — using everything at once</h3>
+<pre><code><span class="cmt"># showcase.vect</span>
+
+<span class="cmt"># --- Vectors ---</span>
+<span class="kw">var</span> v1 = [<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>]
+<span class="kw">var</span> v2 = [<span class="num">4.0</span>, <span class="num">5.0</span>, <span class="num">6.0</span>]
+<span class="fn">print</span>(v1 + v2)          <span class="cmt"># [5, 7, 9]</span>
+<span class="fn">print</span>(v1 · v2)          <span class="cmt"># 32.0</span>
+
+<span class="cmt"># --- Matrices ---</span>
+<span class="kw">var</span> A = [[<span class="num">1.0</span>, <span class="num">2.0</span>], [<span class="num">3.0</span>, <span class="num">4.0</span>]]
+<span class="fn">print</span>(A @ A)             <span class="cmt"># A squared</span>
+
+<span class="cmt"># --- Symbolic calculus ---</span>
+<span class="sym">sym</span> <span class="fn">f</span>(x) = x**<span class="num">2</span> + <span class="num">3</span>*x
+<span class="kw">var</span> df = <span class="sym">d/dx</span>(f(x))
+<span class="fn">print</span>(df)                <span class="cmt"># 2*x + 3</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">4.0</span>))  <span class="cmt"># 11.0</span></code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S4 -->
+<h2 id="s4">4. The REPL — Interactive Mode</h2>
+
+<p>The REPL (Read-Eval-Print Loop) lets you type Vect code one line at a time and see results immediately. It is the fastest way to explore the language.</p>
+
+<p>Start it by running <code>vect</code> with no arguments:</p>
+<pre><code><span class="cmt"># Windows</span>
+venv\Scripts\vect
+
+<span class="cmt"># macOS / Linux</span>
+venv/bin/vect</code></pre>
+
+<p>You will see the welcome banner and a prompt:</p>
+<pre><code><span class="out">__   __       _
+\ \ / /__ ___| |_
+ \ V / -_) _|  _|
+  \_/\___\__|\__|
+
+Vect 0.1.0 — a language with native scientific computing
+Type 'help' for tips, 'exit' to quit.
+
+vect&gt;</span></code></pre>
+
+<p>Now type Vect expressions. Everything you define is remembered for the rest of the session:</p>
+<pre><code><span class="out">vect&gt;</span> <span class="kw">var</span> x = <span class="num">10</span>
+<span class="out">vect&gt;</span> <span class="fn">print</span>(x * <span class="num">3</span>)
+<span class="out">30</span>
+<span class="out">vect&gt;</span> <span class="kw">var</span> v = [<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>]
+<span class="out">vect&gt;</span> <span class="fn">print</span>(v + [<span class="num">10.0</span>, <span class="num">10.0</span>, <span class="num">10.0</span>])
+<span class="out">[11, 12, 13]</span>
+<span class="out">vect&gt;</span> <span class="sym">sym</span> <span class="fn">f</span>(x) = x**<span class="num">3</span>
+<span class="out">vect&gt;</span> <span class="fn">print</span>(<span class="fn">eval</span>(<span class="sym">d/dx</span>(f(x)), x=<span class="num">2.0</span>))
+<span class="out">12.0</span>
+<span class="out">vect&gt;</span> exit
+<span class="out">Bye!</span></code></pre>
+
+<h3>REPL special commands</h3>
+<table>
+  <tr><th>Command</th><th>What it does</th></tr>
+  <tr><td><code>help</code></td><td>Show a syntax cheatsheet and available commands</td></tr>
+  <tr><td><code>clear</code></td><td>Reset the session — forget all variables and functions</td></tr>
+  <tr><td><code>ir</code></td><td>Show the LLVM IR that was generated for your last statement</td></tr>
+  <tr><td><code>exit</code> or <code>quit</code></td><td>Exit the REPL</td></tr>
+</table>
+
+<h3>Multi-line input in the REPL</h3>
+<p>If you open a <code>{</code> brace, the REPL knows you are writing a block and shows <code>...</code> until you close it:</p>
+<pre><code><span class="out">vect&gt;</span> <span class="kw">fn</span> <span class="fn">square</span>(n: <span class="typ">int</span>) -> <span class="typ">int</span> {
+<span class="out">  ...</span>     <span class="kw">return</span> n * n
+<span class="out">  ...</span> }
+<span class="out">vect&gt;</span> <span class="fn">print</span>(<span class="fn">square</span>(<span class="num">7</span>))
+<span class="out">49</span></code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S5 -->
+<h2 id="s5">5. Variables &amp; Types</h2>
+
+<p>Declare a variable with the <code>var</code> keyword followed by a name, <code>=</code>, and a value:</p>
+
+<pre><code><span class="kw">var</span> age     = <span class="num">21</span>           <span class="cmt"># int — a whole number</span>
+<span class="kw">var</span> height  = <span class="num">1.82</span>         <span class="cmt"># float — a decimal number</span>
+<span class="kw">var</span> name    = <span class="str">"Alice"</span>      <span class="cmt"># string — text in double quotes</span>
+<span class="kw">var</span> active  = <span class="kw">true</span>         <span class="cmt"># bool — true or false</span>
+<span class="kw">var</span> scores  = [<span class="num">95.0</span>, <span class="num">87.0</span>, <span class="num">91.0</span>]   <span class="cmt"># vec — a vector of floats</span></code></pre>
+
+<p>Vect <strong>infers the type automatically</strong> from the value. You never need to write the type unless you want to be explicit:</p>
+
+<pre><code><span class="cmt"># These are identical — annotation is optional</span>
+<span class="kw">var</span> x = <span class="num">42</span>
+<span class="kw">var</span> x: <span class="typ">int</span> = <span class="num">42</span></code></pre>
+
+<h3>The four basic types</h3>
+<table>
+  <tr><th>Type</th><th>What it holds</th><th>Examples</th></tr>
+  <tr><td><code>int</code></td><td>Whole numbers (64-bit)</td><td><code>0</code>, <code>-7</code>, <code>1000000</code></td></tr>
+  <tr><td><code>float</code></td><td>Decimal numbers (64-bit)</td><td><code>3.14</code>, <code>-0.5</code>, <code>1.5e10</code></td></tr>
+  <tr><td><code>bool</code></td><td>True or false</td><td><code>true</code>, <code>false</code></td></tr>
+  <tr><td><code>string</code></td><td>Text in double quotes</td><td><code>"hello"</code>, <code>"Vect 0.1"</code></td></tr>
+</table>
+
+<p>And the scientific types:</p>
+<table>
+  <tr><th>Type</th><th>What it holds</th><th>Examples</th></tr>
+  <tr><td><code>vec</code></td><td>A list of float64 numbers</td><td><code>[1.0, 2.0, 3.0]</code></td></tr>
+  <tr><td><code>mat</code></td><td>A 2D grid of float64 numbers</td><td><code>[[1.0,2.0],[3.0,4.0]]</code></td></tr>
+  <tr><td><code>sym</code></td><td>A symbolic math expression</td><td>result of <code>d/dx(...)</code></td></tr>
+</table>
+
+<h3>Reassigning variables</h3>
+<p>To change a variable's value after declaring it, just use <code>=</code> without <code>var</code>:</p>
+<pre><code><span class="kw">var</span> count = <span class="num">0</span>
+count = count + <span class="num">1</span>   <span class="cmt"># now count is 1</span>
+count = count + <span class="num">1</span>   <span class="cmt"># now count is 2</span>
+<span class="fn">print</span>(count)         <span class="cmt"># 2</span></code></pre>
+
+<div class="box box-warn">
+  <strong>Important</strong>
+  Using <code>var</code> again on the same name creates a new variable and shadows the old one. Use plain <code>=</code> when you want to update an existing variable.
+</div>
+
+<h3>Type conversion</h3>
+<pre><code><span class="kw">var</span> n: <span class="typ">float</span> = <span class="fn">float</span>(<span class="num">7</span>)      <span class="cmt"># int → float:  7.0</span>
+<span class="kw">var</span> m: <span class="typ">int</span>   = <span class="fn">int</span>(<span class="num">3.99</span>)    <span class="cmt"># float → int:  3  (truncates)</span>
+<span class="kw">var</span> s: <span class="typ">string</span> = <span class="fn">str</span>(<span class="num">42</span>)     <span class="cmt"># int → string: "42"</span></code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S6 -->
+<h2 id="s6">6. Operators &amp; Arithmetic</h2>
+
+<h3>Arithmetic operators</h3>
+<table>
+  <tr><th>Operator</th><th>Meaning</th><th>Example</th><th>Result</th></tr>
+  <tr><td><code>+</code></td><td>Add</td><td><code>3 + 4</code></td><td><code>7</code></td></tr>
+  <tr><td><code>-</code></td><td>Subtract</td><td><code>10 - 3</code></td><td><code>7</code></td></tr>
+  <tr><td><code>*</code></td><td>Multiply</td><td><code>4 * 5</code></td><td><code>20</code></td></tr>
+  <tr><td><code>/</code></td><td>Divide</td><td><code>10 / 4</code></td><td><code>2</code> (int) or <code>2.5</code> (float)</td></tr>
+  <tr><td><code>%</code></td><td>Modulo (remainder)</td><td><code>17 % 5</code></td><td><code>2</code></td></tr>
+  <tr><td><code>**</code></td><td>Power / exponentiation</td><td><code>2.0 ** 8.0</code></td><td><code>256.0</code></td></tr>
+  <tr><td><code>-x</code></td><td>Unary negation</td><td><code>-9.8</code></td><td><code>-9.8</code></td></tr>
+</table>
+
+<h3>Operator precedence</h3>
+<p>Operators follow standard math precedence (highest first):</p>
+<table>
+  <tr><th>Level</th><th>Operators</th><th>Associativity</th></tr>
+  <tr><td>1 (highest)</td><td><code>**</code></td><td>Right — <code>2**3**2</code> = <code>2**(3**2)</code> = 512</td></tr>
+  <tr><td>2</td><td><code>* / % @ ·</code></td><td>Left</td></tr>
+  <tr><td>3</td><td><code>+ -</code></td><td>Left</td></tr>
+  <tr><td>4</td><td><code>== != &lt; &lt;= &gt; &gt;=</code></td><td>Left</td></tr>
+  <tr><td>5</td><td><code>not</code></td><td>Right</td></tr>
+  <tr><td>6</td><td><code>and</code></td><td>Left</td></tr>
+  <tr><td>7 (lowest)</td><td><code>or</code></td><td>Left</td></tr>
+</table>
+
+<pre><code><span class="kw">var</span> a = <span class="num">2</span> + <span class="num">3</span> * <span class="num">4</span>      <span class="cmt"># 14  (not 20 — * before +)</span>
+<span class="kw">var</span> b = (<span class="num">2</span> + <span class="num">3</span>) * <span class="num">4</span>    <span class="cmt"># 20  (parentheses first)</span>
+<span class="kw">var</span> c = <span class="num">2</span> ** <span class="num">3</span> ** <span class="num">2</span>    <span class="cmt"># 512 (right-associative: 2**(3**2))</span></code></pre>
+
+<h3>Comparison operators → produce bool</h3>
+<pre><code><span class="fn">print</span>(<span class="num">5</span> == <span class="num">5</span>)    <span class="cmt"># true</span>
+<span class="fn">print</span>(<span class="num">5</span> != <span class="num">3</span>)    <span class="cmt"># true</span>
+<span class="fn">print</span>(<span class="num">4</span> &lt; <span class="num">10</span>)    <span class="cmt"># true</span>
+<span class="fn">print</span>(<span class="num">4</span> &gt;= <span class="num">4</span>)    <span class="cmt"># true</span></code></pre>
+
+<h3>Logical operators</h3>
+<pre><code><span class="kw">var</span> a = <span class="kw">true</span>
+<span class="kw">var</span> b = <span class="kw">false</span>
+
+<span class="fn">print</span>(a <span class="kw">and</span> b)    <span class="cmt"># false</span>
+<span class="fn">print</span>(a <span class="kw">or</span>  b)    <span class="cmt"># true</span>
+<span class="fn">print</span>(<span class="kw">not</span> b)      <span class="cmt"># true</span></code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S7 -->
+<h2 id="s7">7. Control Flow</h2>
+
+<h3>if / else if / else</h3>
+<pre><code><span class="kw">var</span> score = <span class="num">85</span>
+
+<span class="kw">if</span> score >= <span class="num">90</span> {
+    <span class="fn">print</span>(<span class="str">"Grade: A"</span>)
+} <span class="kw">else if</span> score >= <span class="num">80</span> {
+    <span class="fn">print</span>(<span class="str">"Grade: B"</span>)
+} <span class="kw">else if</span> score >= <span class="num">70</span> {
+    <span class="fn">print</span>(<span class="str">"Grade: C"</span>)
+} <span class="kw">else</span> {
+    <span class="fn">print</span>(<span class="str">"Grade: F"</span>)
+}
+<span class="cmt"># Output: Grade: B</span></code></pre>
+
+<div class="box box-info">
+  <strong>Syntax rule</strong>
+  Curly braces <code>{ }</code> are required around every block — even single-line ones. There is no "one-liner if" in Vect.
+</div>
+
+<h3>while loop</h3>
+<pre><code><span class="kw">var</span> i = <span class="num">1</span>
+<span class="kw">var</span> total = <span class="num">0</span>
+
+<span class="kw">while</span> i <= <span class="num">10</span> {
+    total = total + i
+    i = i + <span class="num">1</span>
+}
+<span class="fn">print</span>(total)   <span class="cmt"># 55 — sum of 1 to 10</span></code></pre>
+
+<h3>for loop — iterates over a vector</h3>
+<pre><code><span class="cmt"># Loop over a literal vector</span>
+<span class="kw">for</span> x <span class="kw">in</span> [<span class="num">1.0</span>, <span class="num">4.0</span>, <span class="num">9.0</span>, <span class="num">16.0</span>] {
+    <span class="fn">print</span>(<span class="fn">sqrt</span>(x))    <span class="cmt"># 1, 2, 3, 4</span>
+}
+
+<span class="cmt"># Loop over a range of numbers</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>) {
+    <span class="fn">print</span>(i)           <span class="cmt"># 0.0, 1.0, 2.0, 3.0, 4.0</span>
+}
+
+<span class="cmt"># Loop over a named vector</span>
+<span class="kw">var</span> temperatures = [<span class="num">36.6</span>, <span class="num">37.1</span>, <span class="num">38.2</span>, <span class="num">36.9</span>]
+<span class="kw">for</span> t <span class="kw">in</span> temperatures {
+    <span class="kw">if</span> t > <span class="num">37.5</span> {
+        <span class="fn">print</span>(<span class="str">"Fever detected"</span>)
+    }
+}</code></pre>
+
+<h3>break and continue</h3>
+<pre><code><span class="cmt"># break — exit the loop immediately</span>
+<span class="kw">var</span> n = <span class="num">0</span>
+<span class="kw">while</span> <span class="kw">true</span> {
+    n = n + <span class="num">1</span>
+    <span class="kw">if</span> n >= <span class="num">5</span> { <span class="kw">break</span> }
+}
+<span class="fn">print</span>(n)   <span class="cmt"># 5</span>
+
+<span class="cmt"># continue — skip to the next iteration</span>
+<span class="kw">var</span> i = <span class="num">0</span>
+<span class="kw">while</span> i < <span class="num">10</span> {
+    i = i + <span class="num">1</span>
+    <span class="kw">if</span> i % <span class="num">2</span> == <span class="num">0</span> { <span class="kw">continue</span> }
+    <span class="fn">print</span>(i)   <span class="cmt"># 1, 3, 5, 7, 9  (skips even numbers)</span>
+}</code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S8 -->
+<h2 id="s8">8. Functions</h2>
+
+<p>Functions are defined with the <code>fn</code> keyword:</p>
+
+<pre><code><span class="kw">fn</span> <span class="fn">greet</span>(name: <span class="typ">string</span>) {
+    <span class="fn">print</span>(<span class="str">"Hello, "</span> + name + <span class="str">"!"</span>)
+}
+<span class="fn">greet</span>(<span class="str">"Alice"</span>)    <span class="cmt"># Hello, Alice!</span>
+<span class="fn">greet</span>(<span class="str">"Bob"</span>)      <span class="cmt"># Hello, Bob!</span></code></pre>
+
+<h3>Functions that return a value</h3>
+<p>Use <code>-&gt; type</code> to declare what the function returns, then use <code>return</code>:</p>
+<pre><code><span class="kw">fn</span> <span class="fn">add</span>(a: <span class="typ">int</span>, b: <span class="typ">int</span>) -> <span class="typ">int</span> {
+    <span class="kw">return</span> a + b
+}
+
+<span class="kw">fn</span> <span class="fn">circle_area</span>(r: <span class="typ">float</span>) -> <span class="typ">float</span> {
+    <span class="kw">return</span> <span class="num">3.14159</span> * r * r
+}
+
+<span class="fn">print</span>(<span class="fn">add</span>(<span class="num">10</span>, <span class="num">5</span>))              <span class="cmt"># 15</span>
+<span class="fn">print</span>(<span class="fn">circle_area</span>(<span class="num">7.0</span>))        <span class="cmt"># 153.938...</span></code></pre>
+
+<h3>Recursion</h3>
+<p>Functions can call themselves. Vect handles recursion fully:</p>
+<pre><code><span class="kw">fn</span> <span class="fn">factorial</span>(n: <span class="typ">int</span>) -> <span class="typ">int</span> {
+    <span class="kw">if</span> n <= <span class="num">1</span> { <span class="kw">return</span> <span class="num">1</span> }
+    <span class="kw">return</span> n * <span class="fn">factorial</span>(n - <span class="num">1</span>)
+}
+<span class="fn">print</span>(<span class="fn">factorial</span>(<span class="num">5</span>))    <span class="cmt"># 120</span>
+<span class="fn">print</span>(<span class="fn">factorial</span>(<span class="num">10</span>))   <span class="cmt"># 3628800</span>
+
+<span class="kw">fn</span> <span class="fn">fib</span>(n: <span class="typ">int</span>) -> <span class="typ">int</span> {
+    <span class="kw">if</span> n <= <span class="num">1</span> { <span class="kw">return</span> n }
+    <span class="kw">return</span> <span class="fn">fib</span>(n - <span class="num">1</span>) + <span class="fn">fib</span>(n - <span class="num">2</span>)
+}
+<span class="fn">print</span>(<span class="fn">fib</span>(<span class="num">10</span>))   <span class="cmt"># 55</span></code></pre>
+
+<h3>Functions with local variables</h3>
+<pre><code><span class="kw">fn</span> <span class="fn">hypotenuse</span>(a: <span class="typ">float</span>, b: <span class="typ">float</span>) -> <span class="typ">float</span> {
+    <span class="kw">var</span> a_sq = a * a
+    <span class="kw">var</span> b_sq = b * b
+    <span class="kw">return</span> <span class="fn">sqrt</span>(a_sq + b_sq)
+}
+<span class="fn">print</span>(<span class="fn">hypotenuse</span>(<span class="num">3.0</span>, <span class="num">4.0</span>))   <span class="cmt"># 5.0</span></code></pre>
+
+<div class="box box-tip">
+  <strong>Tip — forward declarations</strong>
+  In Vect, you can call a function that is defined later in the file. The compiler does a first pass to register all function signatures before it compiles anything.
+</div>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S9 -->
+<h2 id="s9">9. Vectors — Native First-Class Values</h2>
+
+<div class="box box-star">
+  <strong>★ Signature feature</strong>
+  Vectors are not objects from a library. They are a native literal type in Vect, like integers or strings. The operations are built into the language grammar.
+</div>
+
+<h3>Creating vectors</h3>
+<pre><code><span class="cmt"># A vector of floats</span>
+<span class="kw">var</span> v = [<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>]
+
+<span class="cmt"># Assign to a variable and use later</span>
+<span class="kw">var</span> force    = [<span class="num">0.0</span>, <span class="num">-9.81</span>, <span class="num">0.0</span>]
+<span class="kw">var</span> velocity = [<span class="num">10.0</span>, <span class="num">15.0</span>, <span class="num">0.0</span>]</code></pre>
+
+<h3>Element-wise operations</h3>
+<pre><code><span class="kw">var</span> a = [<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>]
+<span class="kw">var</span> b = [<span class="num">4.0</span>, <span class="num">5.0</span>, <span class="num">6.0</span>]
+
+<span class="fn">print</span>(a + b)    <span class="cmt"># [5, 7, 9]    — element-wise add</span>
+<span class="fn">print</span>(a - b)    <span class="cmt"># [-3, -3, -3] — element-wise subtract</span>
+<span class="fn">print</span>(a * b)    <span class="cmt"># [4, 10, 18]  — element-wise multiply</span></code></pre>
+
+<h3>Scalar operations</h3>
+<pre><code><span class="kw">var</span> v = [<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>]
+
+<span class="fn">print</span>(v * <span class="num">3.0</span>)    <span class="cmt"># [3, 6, 9]    — scale every element</span>
+<span class="fn">print</span>(v * <span class="num">-1.0</span>)   <span class="cmt"># [-1, -2, -3] — negate</span></code></pre>
+
+<h3>Dot product — the · operator</h3>
+<p>The dot product multiplies corresponding elements and sums the results. It is written with the middle-dot character <code>·</code> (Unicode U+00B7).</p>
+<pre><code><span class="kw">var</span> a = [<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>]
+<span class="kw">var</span> b = [<span class="num">4.0</span>, <span class="num">5.0</span>, <span class="num">6.0</span>]
+
+<span class="fn">print</span>(a · b)    <span class="cmt"># 32.0   (1×4 + 2×5 + 3×6 = 4+10+18)</span></code></pre>
+
+<div class="box box-info">
+  <strong>How to type ·</strong>
+  Copy-paste from this document, or: on Windows press <strong>Alt+0183</strong> on the numpad. In VS Code with the Vect extension, it is highlighted automatically when you use it.
+</div>
+
+<h3>Indexing — read and write individual elements</h3>
+<pre><code><span class="kw">var</span> v = [<span class="num">10.0</span>, <span class="num">20.0</span>, <span class="num">30.0</span>]
+
+<span class="fn">print</span>(v[<span class="num">0</span>])    <span class="cmt"># 10.0  — first element (0-based indexing)</span>
+<span class="fn">print</span>(v[<span class="num">2</span>])    <span class="cmt"># 30.0  — last element</span>
+
+v[<span class="num">1</span>] = <span class="num">99.0</span>   <span class="cmt"># change the second element</span>
+<span class="fn">print</span>(v)        <span class="cmt"># [10, 99, 30]</span></code></pre>
+
+<h3>Getting the length</h3>
+<pre><code><span class="kw">var</span> v = [<span class="num">5.0</span>, <span class="num">10.0</span>, <span class="num">15.0</span>, <span class="num">20.0</span>]
+<span class="fn">print</span>(<span class="fn">len</span>(v))    <span class="cmt"># 4</span></code></pre>
+
+<h3>Iterating over a vector</h3>
+<pre><code><span class="kw">var</span> grades = [<span class="num">88.0</span>, <span class="num">92.0</span>, <span class="num">74.0</span>, <span class="num">95.0</span>]
+<span class="kw">var</span> total  = <span class="num">0.0</span>
+
+<span class="kw">for</span> g <span class="kw">in</span> grades {
+    total = total + g
+}
+<span class="fn">print</span>(total / <span class="fn">float</span>(<span class="fn">len</span>(grades)))   <span class="cmt"># 87.25 — average</span></code></pre>
+
+<h3>Real-world example — physics vectors</h3>
+<pre><code><span class="cmt"># Displacement and force vectors in 3D space</span>
+<span class="kw">var</span> displacement = [<span class="num">3.0</span>, <span class="num">4.0</span>, <span class="num">0.0</span>]
+<span class="kw">var</span> force        = [<span class="num">2.0</span>, <span class="num">0.0</span>, <span class="num">5.0</span>]
+
+<span class="cmt"># Work done = force · displacement</span>
+<span class="kw">var</span> work = force · displacement
+<span class="fn">print</span>(work)   <span class="cmt"># 6.0 Joules</span>
+
+<span class="cmt"># Resultant vector</span>
+<span class="kw">var</span> resultant = displacement + force
+<span class="fn">print</span>(resultant)   <span class="cmt"># [5, 4, 5]</span></code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S10 -->
+<h2 id="s10">10. Matrices — Native First-Class Values</h2>
+
+<div class="box box-star">
+  <strong>★ Signature feature</strong>
+  A matrix is written as a list of row vectors. The <code>@</code> operator is matrix multiplication, and <code>T()</code> is transpose — both native to the language.
+</div>
+
+<h3>Creating matrices</h3>
+<pre><code><span class="cmt"># A 2×2 matrix</span>
+<span class="kw">var</span> A = [[<span class="num">1.0</span>, <span class="num">2.0</span>],
+         [<span class="num">3.0</span>, <span class="num">4.0</span>]]
+
+<span class="cmt"># A 3×3 identity matrix</span>
+<span class="kw">var</span> I = [[<span class="num">1.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>],
+         [<span class="num">0.0</span>, <span class="num">1.0</span>, <span class="num">0.0</span>],
+         [<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">1.0</span>]]</code></pre>
+
+<h3>Matrix multiplication — the @ operator</h3>
+<pre><code><span class="kw">var</span> A = [[<span class="num">1.0</span>, <span class="num">2.0</span>], [<span class="num">3.0</span>, <span class="num">4.0</span>]]
+<span class="kw">var</span> B = [[<span class="num">5.0</span>, <span class="num">6.0</span>], [<span class="num">7.0</span>, <span class="num">8.0</span>]]
+
+<span class="fn">print</span>(A @ B)
+<span class="cmt"># [
+#   [19, 22],
+#   [43, 50]
+# ]</span></code></pre>
+
+<h3>Transpose</h3>
+<pre><code><span class="kw">var</span> A = [[<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>],
+         [<span class="num">4.0</span>, <span class="num">5.0</span>, <span class="num">6.0</span>]]
+
+<span class="fn">print</span>(<span class="fn">T</span>(A))
+<span class="cmt"># [
+#   [1, 4],
+#   [2, 5],
+#   [3, 6]
+# ]</span></code></pre>
+
+<h3>Element-wise operations on matrices</h3>
+<pre><code><span class="kw">var</span> A = [[<span class="num">1.0</span>, <span class="num">2.0</span>], [<span class="num">3.0</span>, <span class="num">4.0</span>]]
+<span class="kw">var</span> B = [[<span class="num">5.0</span>, <span class="num">6.0</span>], [<span class="num">7.0</span>, <span class="num">8.0</span>]]
+
+<span class="fn">print</span>(A + B)      <span class="cmt"># [[6,8],[10,12]]</span>
+<span class="fn">print</span>(A - B)      <span class="cmt"># [[-4,-4],[-4,-4]]</span>
+<span class="fn">print</span>(A * <span class="num">2.0</span>)    <span class="cmt"># [[2,4],[6,8]]</span></code></pre>
+
+<h3>Matrix × vector (column vector)</h3>
+<pre><code><span class="cmt"># 90-degree rotation matrix</span>
+<span class="kw">var</span> R = [[<span class="num">0.0</span>, <span class="num">-1.0</span>],
+         [<span class="num">1.0</span>,  <span class="num">0.0</span>]]
+
+<span class="cmt"># Column vector as a 2×1 matrix</span>
+<span class="kw">var</span> point = [[<span class="num">1.0</span>], [<span class="num">0.0</span>]]
+
+<span class="fn">print</span>(R @ point)
+<span class="cmt"># [
+#   [0],
+#   [1]
+# ]
+# The point (1,0) rotated 90° = (0,1)</span></code></pre>
+
+<h3>Row access</h3>
+<pre><code><span class="kw">var</span> M = [[<span class="num">10.0</span>, <span class="num">20.0</span>], [<span class="num">30.0</span>, <span class="num">40.0</span>]]
+<span class="kw">var</span> row0 = M[<span class="num">0</span>]   <span class="cmt"># returns [10, 20] as a vec</span>
+<span class="fn">print</span>(row0)        <span class="cmt"># [10, 20]</span></code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S11 -->
+<h2 id="s11">11. Symbolic Differentiation — The Headline Feature</h2>
+
+<div class="box box-star">
+  <strong>★★ The feature that makes Vect unlike anything else</strong>
+  <code>d/dx</code> is a real language operator. It performs symbolic calculus — computing the exact mathematical derivative of an expression, not a numerical approximation.
+</div>
+
+<h3>Step 1 — Define a symbolic function with sym</h3>
+<p>The <code>sym</code> keyword tells Vect that a function is symbolic — its body is a mathematical expression, not compiled code:</p>
+<pre><code><span class="sym">sym</span> <span class="fn">f</span>(x) = x**<span class="num">2</span> + <span class="num">3</span>*x + <span class="num">1</span></code></pre>
+
+<h3>Step 2 — Differentiate with d/dx</h3>
+<p>The <code>d/d</code> prefix followed by a variable name is the differentiation operator. It returns a symbolic expression:</p>
+<pre><code><span class="kw">var</span> df = <span class="sym">d/dx</span>(f(x))
+<span class="fn">print</span>(df)    <span class="cmt"># 2*x + 3</span></code></pre>
+
+<p>You can use any variable name after <code>d/d</code>:</p>
+<pre><code><span class="sym">sym</span> <span class="fn">g</span>(t) = <span class="num">5</span>*t**<span class="num">3</span> - <span class="num">2</span>*t
+
+<span class="kw">var</span> dg = <span class="sym">d/dt</span>(g(t))
+<span class="fn">print</span>(dg)    <span class="cmt"># 15*t**2 - 2</span></code></pre>
+
+<h3>Step 3 — Evaluate numerically with eval</h3>
+<p><code>eval(expr, var=value)</code> substitutes a number for the symbolic variable and returns a float:</p>
+<pre><code><span class="sym">sym</span> <span class="fn">f</span>(x) = x**<span class="num">2</span> + <span class="num">3</span>*x + <span class="num">1</span>
+<span class="kw">var</span> df = <span class="sym">d/dx</span>(f(x))    <span class="cmt"># 2*x + 3</span>
+
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">0.0</span>))    <span class="cmt"># 3.0</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">2.0</span>))    <span class="cmt"># 7.0</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">10.0</span>))   <span class="cmt"># 23.0</span></code></pre>
+
+<h3>Complete physics examples</h3>
+
+<h4>Free-fall kinematics</h4>
+<pre><code><span class="cmt"># Position of a falling object under gravity</span>
+<span class="cmt"># s(t) = v₀·t - ½·g·t²   (v₀=20 m/s, g=9.8 m/s²)</span>
+<span class="sym">sym</span> <span class="fn">s</span>(t) = <span class="num">20.0</span>*t - <span class="num">0.5</span>*<span class="num">9.8</span>*t**<span class="num">2</span>
+
+<span class="cmt"># Velocity = ds/dt</span>
+<span class="kw">var</span> velocity = <span class="sym">d/dt</span>(s(t))
+<span class="fn">print</span>(velocity)                   <span class="cmt"># 20.0 - 9.8*t</span>
+
+<span class="cmt"># Velocity at t = 1 second</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(velocity, t=<span class="num">1.0</span>))    <span class="cmt"># 10.2 m/s</span>
+
+<span class="cmt"># At peak height, velocity = 0 → t ≈ 2.04s</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(velocity, t=<span class="num">2.04</span>))   <span class="cmt"># ≈ 0.0 m/s</span></code></pre>
+
+<h4>Kinetic energy and momentum</h4>
+<pre><code><span class="cmt"># KE = ½mv²  where m = 2 kg</span>
+<span class="sym">sym</span> <span class="fn">KE</span>(v) = <span class="num">0.5</span> * <span class="num">2.0</span> * v**<span class="num">2</span>
+
+<span class="cmt"># dKE/dv = mv  (this is momentum!)</span>
+<span class="kw">var</span> momentum = <span class="sym">d/dv</span>(KE(v))
+<span class="fn">print</span>(momentum)                    <span class="cmt"># 2.0*v</span>
+
+<span class="fn">print</span>(<span class="fn">eval</span>(momentum, v=<span class="num">5.0</span>))     <span class="cmt"># 10.0 kg·m/s</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(momentum, v=<span class="num">10.0</span>))    <span class="cmt"># 20.0 kg·m/s</span></code></pre>
+
+<h4>Polynomial curve analysis</h4>
+<pre><code><span class="cmt"># f(x) = x³ - 3x² + 2</span>
+<span class="sym">sym</span> <span class="fn">f</span>(x) = x**<span class="num">3</span> - <span class="num">3</span>*x**<span class="num">2</span> + <span class="num">2</span>
+
+<span class="kw">var</span> df  = <span class="sym">d/dx</span>(f(x))     <span class="cmt"># 3*x**2 - 6*x</span>
+<span class="fn">print</span>(df)
+
+<span class="cmt"># Critical points where df = 0 → x=0 and x=2</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">0.0</span>))   <span class="cmt"># 0.0  ← critical point</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">2.0</span>))   <span class="cmt"># 0.0  ← critical point</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">1.0</span>))   <span class="cmt"># -3.0 ← slope at x=1</span></code></pre>
+
+<div class="box box-info">
+  <strong>How it works under the hood</strong>
+  When you write <code>d/dx(f(x))</code>, the Vect compiler converts your expression into a string that SymPy (a Python symbolic math library) can understand. SymPy computes the exact derivative. The result is stored as a symbolic expression object in Vect's runtime. When you call <code>eval()</code>, it substitutes your value and returns a float. You never see or interact with SymPy directly — it is completely hidden behind the language syntax.
+</div>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S12 -->
+<h2 id="s12">12. Built-in Functions</h2>
+
+<table>
+  <tr><th>Function</th><th>Input</th><th>Output</th><th>Example</th></tr>
+  <tr><td><code>print(x)</code></td><td>Any type</td><td>void</td><td><code>print("hi")</code></td></tr>
+  <tr><td><code>input()</code></td><td>—</td><td>string</td><td><code>var s = input()</code></td></tr>
+  <tr><td><code>len(v)</code></td><td>vec or mat</td><td>int</td><td><code>len([1,2,3])</code> → <code>3</code></td></tr>
+  <tr><td><code>sqrt(x)</code></td><td>float</td><td>float</td><td><code>sqrt(9.0)</code> → <code>3.0</code></td></tr>
+  <tr><td><code>sin(x)</code></td><td>float (radians)</td><td>float</td><td><code>sin(0.0)</code> → <code>0.0</code></td></tr>
+  <tr><td><code>cos(x)</code></td><td>float (radians)</td><td>float</td><td><code>cos(0.0)</code> → <code>1.0</code></td></tr>
+  <tr><td><code>tan(x)</code></td><td>float (radians)</td><td>float</td><td><code>tan(0.785)</code> → <code>≈1.0</code></td></tr>
+  <tr><td><code>abs(x)</code></td><td>float</td><td>float</td><td><code>abs(-5.5)</code> → <code>5.5</code></td></tr>
+  <tr><td><code>floor(x)</code></td><td>float</td><td>int</td><td><code>floor(3.9)</code> → <code>3</code></td></tr>
+  <tr><td><code>ceil(x)</code></td><td>float</td><td>int</td><td><code>ceil(3.1)</code> → <code>4</code></td></tr>
+  <tr><td><code>int(x)</code></td><td>any numeric</td><td>int</td><td><code>int(3.7)</code> → <code>3</code></td></tr>
+  <tr><td><code>float(x)</code></td><td>any numeric</td><td>float</td><td><code>float(7)</code> → <code>7.0</code></td></tr>
+  <tr><td><code>str(x)</code></td><td>int or float</td><td>string</td><td><code>str(42)</code> → <code>"42"</code></td></tr>
+  <tr><td><code>range(n)</code></td><td>int</td><td>vec</td><td><code>range(4)</code> → <code>[0,1,2,3]</code></td></tr>
+  <tr><td><code>range(a,b)</code></td><td>int, int</td><td>vec</td><td><code>range(1,5)</code> → <code>[1,2,3,4]</code></td></tr>
+  <tr><td><code>T(m)</code></td><td>mat</td><td>mat</td><td><code>T(A)</code> → transpose of A</td></tr>
+  <tr><td><code>eval(e,v=n)</code></td><td>sym, binding</td><td>float</td><td><code>eval(df, x=2.0)</code></td></tr>
+</table>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S13 -->
+<h2 id="s13">13. String Operations</h2>
+
+<pre><code><span class="cmt"># Declare and print</span>
+<span class="kw">var</span> s = <span class="str">"Hello, Vect!"</span>
+<span class="fn">print</span>(s)
+
+<span class="cmt"># Concatenation with +</span>
+<span class="kw">var</span> first = <span class="str">"Ada"</span>
+<span class="kw">var</span> last  = <span class="str">"Lovelace"</span>
+<span class="fn">print</span>(first + <span class="str">" "</span> + last)   <span class="cmt"># Ada Lovelace</span>
+
+<span class="cmt"># Convert numbers to strings for concatenation</span>
+<span class="kw">var</span> score = <span class="num">98</span>
+<span class="fn">print</span>(<span class="str">"Score: "</span> + <span class="fn">str</span>(score))   <span class="cmt"># Score: 98</span>
+
+<span class="cmt"># Read input from the user</span>
+<span class="fn">print</span>(<span class="str">"What is your name?"</span>)
+<span class="kw">var</span> name = <span class="fn">input</span>()
+<span class="fn">print</span>(<span class="str">"Welcome, "</span> + name + <span class="str">"!"</span>)</code></pre>
+
+<h3>Escape sequences inside strings</h3>
+<table>
+  <tr><th>Sequence</th><th>Meaning</th></tr>
+  <tr><td><code>\n</code></td><td>Newline</td></tr>
+  <tr><td><code>\t</code></td><td>Tab</td></tr>
+  <tr><td><code>\"</code></td><td>Double quote inside a string</td></tr>
+  <tr><td><code>\\</code></td><td>Backslash</td></tr>
+</table>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S14 -->
+<h2 id="s14">14. Type System &amp; Error Messages</h2>
+
+<p>Vect checks types <strong>before</strong> your program runs. If something is wrong, you get a clear message that points at the exact line and tells you in plain English what to fix.</p>
+
+<h3>Undefined variable</h3>
+<pre><code><span class="fn">print</span>(myVar)   <span class="cmt"># forgot to declare it</span></code></pre>
+<pre><code><span class="out">  ⚠  Type Error
+  Type error at line 1, col 7: 'myVar' is not defined.
+  Check the spelling or make sure you declared it with 'var'.</span></code></pre>
+
+<h3>Type mismatch in an operation</h3>
+<pre><code><span class="fn">print</span>(<span class="str">"price: "</span> + <span class="num">9.99</span>)</code></pre>
+<pre><code><span class="out">  ⚠  Type Error
+  Type error at line 1, col 16: Cannot use '+' between a string and a 'float'.
+  To concatenate, convert to string first with str(...).</span></code></pre>
+
+<h3>Wrong number of arguments</h3>
+<pre><code><span class="kw">fn</span> <span class="fn">add</span>(a: <span class="typ">int</span>, b: <span class="typ">int</span>) -> <span class="typ">int</span> { <span class="kw">return</span> a + b }
+<span class="fn">add</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>)</code></pre>
+<pre><code><span class="out">  ⚠  Type Error
+  Type error at line 2, col 1: Function 'add' expects 2 argument(s) but got 3.</span></code></pre>
+
+<h3>Type mismatch in declaration</h3>
+<pre><code><span class="kw">var</span> x: <span class="typ">int</span> = <span class="num">3.14</span></code></pre>
+<pre><code><span class="out">  ⚠  Type Error
+  Type error at line 1, col 5: Variable 'x' is declared as 'int' but the value
+  is a float. Use 'int(...)' to convert explicitly, or declare it as 'float'.</span></code></pre>
+
+<h3>Type promotion — int and float mix automatically</h3>
+<p>You never need to manually convert when mixing <code>int</code> and <code>float</code> in arithmetic — Vect promotes the int to float automatically:</p>
+<pre><code><span class="kw">var</span> result = <span class="num">3</span> + <span class="num">1.5</span>    <span class="cmt"># fine — result is float 4.5</span>
+<span class="kw">var</span> area   = <span class="num">2</span> * <span class="num">3.14</span>   <span class="cmt"># fine — area is float 6.28</span></code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S15 -->
+<h2 id="s15">15. CLI Reference</h2>
+
+<table>
+  <tr><th>Command</th><th>What it does</th></tr>
+  <tr><td><code>vect</code></td><td>Start the interactive REPL</td></tr>
+  <tr><td><code>vect run &lt;file.vect&gt;</code></td><td>Compile and run a program</td></tr>
+  <tr><td><code>vect check &lt;file.vect&gt;</code></td><td>Type-check without running — find errors early</td></tr>
+  <tr><td><code>vect ir &lt;file.vect&gt;</code></td><td>Dump the generated LLVM IR — see inside the compiler</td></tr>
+</table>
+
+<h3>Examples</h3>
+<pre><code><span class="cmt"># Run the demo program</span>
+venv\Scripts\vect run examples\demo.vect
+
+<span class="cmt"># Check your code for errors before running</span>
+venv\Scripts\vect check myprogram.vect
+
+<span class="cmt"># See the LLVM IR the compiler generated</span>
+venv\Scripts\vect ir examples\fibonacci.vect
+
+<span class="cmt"># Start exploring interactively</span>
+venv\Scripts\vect</code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S16 -->
+<h2 id="s16">16. Complete Example Programs</h2>
+
+<h3>Example 1 — Fibonacci sequence</h3>
+<pre><code><span class="cmt"># fibonacci.vect</span>
+<span class="kw">fn</span> <span class="fn">fib</span>(n: <span class="typ">int</span>) -> <span class="typ">int</span> {
+    <span class="kw">if</span> n <= <span class="num">1</span> { <span class="kw">return</span> n }
+    <span class="kw">return</span> <span class="fn">fib</span>(n - <span class="num">1</span>) + <span class="fn">fib</span>(n - <span class="num">2</span>)
+}
+
+<span class="kw">var</span> i = <span class="num">0</span>
+<span class="kw">while</span> i <= <span class="num">10</span> {
+    <span class="fn">print</span>(<span class="fn">fib</span>(i))
+    i = i + <span class="num">1</span>
+}
+<span class="cmt"># Output: 0 1 1 2 3 5 8 13 21 34 55</span></code></pre>
+
+<h3>Example 2 — Grade calculator</h3>
+<pre><code><span class="cmt"># grades.vect</span>
+<span class="kw">fn</span> <span class="fn">letter_grade</span>(score: <span class="typ">float</span>) -> <span class="typ">string</span> {
+    <span class="kw">if</span> score >= <span class="num">90.0</span> { <span class="kw">return</span> <span class="str">"A"</span> }
+    <span class="kw">if</span> score >= <span class="num">80.0</span> { <span class="kw">return</span> <span class="str">"B"</span> }
+    <span class="kw">if</span> score >= <span class="num">70.0</span> { <span class="kw">return</span> <span class="str">"C"</span> }
+    <span class="kw">if</span> score >= <span class="num">60.0</span> { <span class="kw">return</span> <span class="str">"D"</span> }
+    <span class="kw">return</span> <span class="str">"F"</span>
+}
+
+<span class="kw">var</span> scores = [<span class="num">95.0</span>, <span class="num">82.0</span>, <span class="num">67.0</span>, <span class="num">74.0</span>, <span class="num">55.0</span>]
+<span class="kw">var</span> total  = <span class="num">0.0</span>
+
+<span class="kw">for</span> s <span class="kw">in</span> scores {
+    total = total + s
+}
+
+<span class="kw">var</span> average = total / <span class="fn">float</span>(<span class="fn">len</span>(scores))
+<span class="fn">print</span>(<span class="str">"Average: "</span> + <span class="fn">str</span>(average))
+<span class="fn">print</span>(<span class="str">"Grade: "</span>   + <span class="fn">letter_grade</span>(average))</code></pre>
+
+<h3>Example 3 — Linear algebra</h3>
+<pre><code><span class="cmt"># linear_algebra.vect</span>
+<span class="fn">print</span>(<span class="str">"=== Dot Product ==="</span>)
+<span class="kw">var</span> u = [<span class="num">3.0</span>, <span class="num">4.0</span>, <span class="num">0.0</span>]
+<span class="kw">var</span> v = [<span class="num">1.0</span>, <span class="num">0.0</span>, <span class="num">5.0</span>]
+<span class="fn">print</span>(u · v)    <span class="cmt"># 3.0</span>
+
+<span class="fn">print</span>(<span class="str">"=== Matrix Multiply ==="</span>)
+<span class="kw">var</span> A = [[<span class="num">2.0</span>, <span class="num">0.0</span>], [<span class="num">0.0</span>, <span class="num">3.0</span>]]   <span class="cmt"># scaling matrix</span>
+<span class="kw">var</span> B = [[<span class="num">1.0</span>, <span class="num">2.0</span>], [<span class="num">3.0</span>, <span class="num">4.0</span>]]
+<span class="fn">print</span>(A @ B)    <span class="cmt"># [[2,4],[9,12]]</span>
+
+<span class="fn">print</span>(<span class="str">"=== Transpose ==="</span>)
+<span class="fn">print</span>(<span class="fn">T</span>(B))     <span class="cmt"># [[1,3],[2,4]]</span></code></pre>
+
+<h3>Example 4 — Symbolic calculus</h3>
+<pre><code><span class="cmt"># calculus.vect</span>
+<span class="fn">print</span>(<span class="str">"=== Differentiation ==="</span>)
+
+<span class="sym">sym</span> <span class="fn">f</span>(x) = x**<span class="num">3</span> - <span class="num">6</span>*x**<span class="num">2</span> + <span class="num">9</span>*x
+<span class="kw">var</span> df = <span class="sym">d/dx</span>(f(x))
+<span class="fn">print</span>(df)                       <span class="cmt"># 3*x**2 - 12*x + 9</span>
+
+<span class="cmt"># Find where the slope is zero (critical points)</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">1.0</span>))         <span class="cmt"># 0.0  ← local max at x=1</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(df, x=<span class="num">3.0</span>))         <span class="cmt"># 0.0  ← local min at x=3</span>
+
+<span class="fn">print</span>(<span class="str">"=== Physics ==="</span>)
+<span class="sym">sym</span> <span class="fn">s</span>(t) = <span class="num">30.0</span>*t - <span class="num">4.9</span>*t**<span class="num">2</span>   <span class="cmt"># throw upward at 30 m/s</span>
+<span class="kw">var</span> vel = <span class="sym">d/dt</span>(s(t))
+<span class="fn">print</span>(vel)                       <span class="cmt"># 30.0 - 9.8*t</span>
+<span class="fn">print</span>(<span class="fn">eval</span>(vel, t=<span class="num">3.06</span>))        <span class="cmt"># ≈ 0 — peak of flight</span></code></pre>
+
+<h3>Example 5 — Everything together (the demo)</h3>
+<p>The file <code>examples/demo.vect</code> in the repository combines all features into one program designed to be run live. Run it with:</p>
+<pre><code>venv\Scripts\vect run examples\demo.vect</code></pre>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S17 -->
+<h2 id="s17">17. How the Compiler Works</h2>
+
+<p>You do not need to understand this to use Vect. But if you are curious — here is the full picture.</p>
+
+<div class="pipeline">  source.vect  (text you wrote)
+       │
+       ▼
+  ┌─────────────────────────────────────────┐
+  │  LEXER   src/lexer.py                   │
+  │                                         │
+  │  Reads character by character and       │
+  │  groups them into "tokens":             │
+  │                                         │
+  │   "var"   →  VAR keyword               │
+  │   "x"     →  IDENT identifier          │
+  │   "="     →  ASSIGN operator           │
+  │   "42"    →  INT literal               │
+  │   "d/dx"  →  DDIV symbolic operator    │
+  └───────────────────┬─────────────────────┘
+                      │ list of tokens
+                      ▼
+  ┌─────────────────────────────────────────┐
+  │  PARSER   src/parser.py                 │
+  │                                         │
+  │  Reads the token list and builds a      │
+  │  tree of nodes (the AST):               │
+  │                                         │
+  │  VarDecl("x")                           │
+  │    └── BinOp("+")                       │
+  │          ├── IntLiteral(40)             │
+  │          └── IntLiteral(2)              │
+  └───────────────────┬─────────────────────┘
+                      │ Abstract Syntax Tree
+                      ▼
+  ┌─────────────────────────────────────────┐
+  │  TYPE CHECKER   src/type_checker.py     │
+  │                                         │
+  │  Walks the tree and verifies types.     │
+  │  "x + y" where x=int, y=string → ERROR │
+  │  Gives plain-English error messages     │
+  │  pointing at the exact line/column.     │
+  └───────────────────┬─────────────────────┘
+                      │ verified AST
+                      ▼
+  ┌─────────────────────────────────────────┐
+  │  CODE GENERATOR   src/codegen.py        │
+  │                                         │
+  │  Walks the tree and emits LLVM IR.      │
+  │  LLVM IR is a typed assembly language   │
+  │  used by Clang, Rust, and Swift.        │
+  │                                         │
+  │  var x = 40 + 2  becomes:              │
+  │    %x = alloca i64                      │
+  │    store i64 42, i64* %x               │
+  └───────────────────┬─────────────────────┘
+                      │ LLVM IR text
+                      ▼
+  ┌─────────────────────────────────────────┐
+  │  LLVM JIT   (llvmlite binding)          │
+  │                                         │
+  │  Compiles LLVM IR to native x86-64      │
+  │  machine code and runs it immediately.  │
+  └───────────────────┬─────────────────────┘
+                      │ running program
+                      ▼
+  ┌─────────────────────────────────────────┐
+  │  RUNTIME   src/runtime.py               │
+  │                                         │
+  │  The compiled code calls Python         │
+  │  functions (via ctypes) for:            │
+  │   - vector/matrix operations            │
+  │   - symbolic differentiation (sympy)   │
+  │   - print / input                       │
+  └─────────────────────────────────────────┘</div>
+
+<p style="margin-top:16px;">The source files are all in the <code>src/</code> folder and are heavily commented. If you want to understand how any part works, open the file and read — it is written to be understood.</p>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════════════════ S18 -->
+<h2 id="s18">18. Quick Reference Card</h2>
+
+<h3>Declarations</h3>
+<pre><code><span class="kw">var</span> name = value                    <span class="cmt"># variable</span>
+<span class="kw">var</span> name: <span class="typ">type</span> = value              <span class="cmt"># with explicit type</span>
+<span class="kw">fn</span> <span class="fn">name</span>(p: <span class="typ">type</span>) -> <span class="typ">type</span> { ... }   <span class="cmt"># function</span>
+<span class="sym">sym</span> <span class="fn">name</span>(x) = expr                  <span class="cmt"># symbolic function</span></code></pre>
+
+<h3>Types</h3>
+<pre><code><span class="typ">int</span>     <span class="num">42</span>                           <span class="cmt"># whole number</span>
+<span class="typ">float</span>   <span class="num">3.14</span>                         <span class="cmt"># decimal</span>
+<span class="typ">bool</span>    <span class="kw">true</span>  <span class="kw">false</span>                 <span class="cmt"># boolean</span>
+<span class="typ">string</span>  <span class="str">"hello"</span>                      <span class="cmt"># text</span>
+<span class="typ">vec</span>     [<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>]             <span class="cmt"># vector</span>
+<span class="typ">mat</span>     [[<span class="num">1.0</span>,<span class="num">2.0</span>],[<span class="num">3.0</span>,<span class="num">4.0</span>]]       <span class="cmt"># matrix</span></code></pre>
+
+<h3>Operators</h3>
+<pre><code>+  -  *  /  %  **                    <span class="cmt"># arithmetic</span>
+==  !=  <  <=  >  >=                  <span class="cmt"># comparison</span>
+<span class="kw">and</span>  <span class="kw">or</span>  <span class="kw">not</span>                         <span class="cmt"># logical</span>
+@                                     <span class="cmt"># matrix multiply</span>
+·                                     <span class="cmt"># dot product</span>
+<span class="sym">d/dx</span>                                  <span class="cmt"># symbolic derivative</span></code></pre>
+
+<h3>Control flow</h3>
+<pre><code><span class="kw">if</span> cond { } <span class="kw">else if</span> cond { } <span class="kw">else</span> { }
+<span class="kw">while</span> cond { }
+<span class="kw">for</span> x <span class="kw">in</span> vec { }
+<span class="kw">break</span>   <span class="kw">continue</span>   <span class="kw">return</span> value</code></pre>
+
+<h3>Symbolic calculus</h3>
+<pre><code><span class="sym">sym</span> <span class="fn">f</span>(x) = expr              <span class="cmt"># define symbolic function</span>
+<span class="kw">var</span> df = <span class="sym">d/dx</span>(f(x))          <span class="cmt"># differentiate</span>
+<span class="kw">var</span> n  = <span class="fn">eval</span>(df, x=<span class="num">2.0</span>)    <span class="cmt"># evaluate numerically</span></code></pre>
+
+<h3>CLI commands</h3>
+<pre><code>vect                          <span class="cmt"># REPL</span>
+vect run  &lt;file.vect&gt;         <span class="cmt"># compile + run</span>
+vect check &lt;file.vect&gt;        <span class="cmt"># type-check only</span>
+vect ir   &lt;file.vect&gt;         <span class="cmt"># dump LLVM IR</span></code></pre>
+
+<hr class="divider"/>
+
+<div style="text-align:center; padding:40px 0 20px; color:#888; font-size:0.9rem;">
+  <p><strong style="color:#0f3460; font-size:1.1rem;">Vect Language Guide — v0.1.0</strong></p>
+  <p>Built by Eddie · <a href="https://github.com/Eddiegah/Vect">github.com/Eddiegah/Vect</a></p>
+  <p style="margin-top:8px; font-style:italic;">"Scientific computing should be syntax, not scaffolding."</p>
+</div>
+
+</body>
+</html>
