@@ -1,0 +1,25 @@
+# symbolic_derivative.vect — symbolic differentiation
+# The "wow" feature: d/dx is a native Vect operator, not a library call.
+
+# Define a symbolic function
+sym f(x) = x**2 + 3*x + 1
+
+# Differentiate it
+var df = d/dx(f(x))
+print(df)
+
+# Evaluate the derivative at x = 2
+var slope = eval(df, x=2.0)
+print(slope)
+
+# More complex: physics-style kinematics
+# position: s(t) = 0.5 * a * t**2  (with a = 9.8)
+sym s(t) = 0.5 * 9.8 * t**2
+
+# velocity = ds/dt
+var velocity = d/dt(s(t))
+print(velocity)
+
+# velocity at t = 3 seconds
+var v_at_3 = eval(velocity, t=3.0)
+print(v_at_3)

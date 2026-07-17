@@ -1,0 +1,48 @@
+# control_flow.vect — demonstrates if/else, while, for, functions
+
+fn max(a: int, b: int) -> int {
+    if a > b {
+        return a
+    } else {
+        return b
+    }
+}
+
+fn abs_val(x: int) -> int {
+    if x < 0 {
+        return -x
+    }
+    return x
+}
+
+# if/else chain
+var score = 85
+if score >= 90 {
+    print("A")
+} else if score >= 80 {
+    print("B")
+} else if score >= 70 {
+    print("C")
+} else {
+    print("F")
+}
+
+# while loop with break
+var n = 1
+while n <= 100 {
+    if n * n > 50 {
+        break
+    }
+    n = n + 1
+}
+print(n)
+
+# for loop
+var sum = 0.0
+for x in [1, 2, 3, 4, 5] {
+    sum = sum + x
+}
+print(sum)
+
+print(max(7, 3))
+print(abs_val(-42))

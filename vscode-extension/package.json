@@ -1,0 +1,26 @@
+{
+  "name": "vect-lang",
+  "displayName": "Vect Language",
+  "description": "Syntax highlighting for the Vect programming language",
+  "version": "0.1.0",
+  "publisher": "vect-lang",
+  "engines": { "vscode": "^1.60.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "vect",
+        "aliases": ["Vect", "vect"],
+        "extensions": [".vect"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "vect",
+        "scopeName": "source.vect",
+        "path": "./syntaxes/vect.tmLanguage.json"
+      }
+    ]
+  }
+}

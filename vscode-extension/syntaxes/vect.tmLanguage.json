@@ -1,0 +1,141 @@
+{
+  "name": "Vect",
+  "scopeName": "source.vect",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#symbolic"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#builtins"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#functions"
+    },
+    {
+      "include": "#identifiers"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.line.number-sign.vect",
+      "match": "#.*$"
+    },
+    "strings": {
+      "name": "string.quoted.double.vect",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.vect",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "symbolic": {
+      "patterns": [
+        {
+          "name": "keyword.operator.symbolic.vect",
+          "match": "\\bd/d[a-zA-Z_][a-zA-Z0-9_]*"
+        },
+        {
+          "name": "keyword.other.sym.vect",
+          "match": "\\bsym\\b"
+        },
+        {
+          "name": "support.function.eval.vect",
+          "match": "\\beval\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.vect",
+          "match": "\\b(if|else|while|for|in|break|continue|return)\\b"
+        },
+        {
+          "name": "keyword.declaration.vect",
+          "match": "\\b(var|fn|sym)\\b"
+        },
+        {
+          "name": "constant.language.vect",
+          "match": "\\b(true|false)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.vect",
+          "match": "\\b(and|or|not)\\b"
+        }
+      ]
+    },
+    "types": {
+      "name": "storage.type.vect",
+      "match": "\\b(int|float|bool|string|vec|mat)\\b"
+    },
+    "builtins": {
+      "name": "support.function.builtin.vect",
+      "match": "\\b(print|input|len|sqrt|sin|cos|tan|abs|floor|ceil|range|str|eval|T)\\b"
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.vect",
+          "match": "\\b\\d+\\.\\d*([eE][+-]?\\d+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.vect",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.matrix.vect",
+          "match": "@|·"
+        },
+        {
+          "name": "keyword.operator.arrow.vect",
+          "match": "->"
+        },
+        {
+          "name": "keyword.operator.comparison.vect",
+          "match": "==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.arithmetic.vect",
+          "match": "\\*\\*|[+\\-*/%]"
+        },
+        {
+          "name": "keyword.operator.assignment.vect",
+          "match": "="
+        }
+      ]
+    },
+    "functions": {
+      "name": "entity.name.function.vect",
+      "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s*\\()"
+    },
+    "identifiers": {
+      "name": "variable.other.vect",
+      "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+    }
+  }
+}

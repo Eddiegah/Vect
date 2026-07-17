@@ -1,0 +1,36 @@
+# demo.vect — live presentation demo
+# Run: vect run examples/demo.vect
+
+print("--- 1. Functions & Recursion ---")
+fn fib(n: int) -> int {
+    if n <= 1 { return n }
+    return fib(n - 1) + fib(n - 2)
+}
+print(fib(10))
+
+print("--- 2. Native Vectors ---")
+var a = [3.0, 1.0, 4.0, 1.0, 5.0]
+var b = [1.0, 0.0, 0.0, 1.0, 0.0]
+print(a + b)
+print(a · b)
+
+print("--- 3. Matrix Multiply ---")
+var R = [[0.0, -1.0], [1.0, 0.0]]
+var p = [[1.0], [0.0]]
+print(R @ p)
+
+print("--- 4. Symbolic Differentiation ---")
+sym f(x) = x**3 - 2*x**2 + x
+var df  = d/dx(f(x))
+print(df)
+print(eval(df, x=1.0))
+print(eval(df, x=2.0))
+
+print("--- 5. Physics: Projectile ---")
+sym height(t) = 10.0*t - 0.5*9.8*t**2
+var velocity = d/dt(height(t))
+print(velocity)
+var peak_time = eval(velocity, t=0.0)
+print(peak_time)
+
+print("Done.")

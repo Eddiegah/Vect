@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vect-lang"
+version = "0.1.0"
+description = "Vect — a compiled language with native vectors, matrices, and symbolic differentiation"
+requires-python = ">=3.9,<3.13"
+dependencies = [
+    "llvmlite==0.43.0",
+    "sympy==1.13.1",
+    "click==8.1.7",
+]
+
+[project.scripts]
+vect = "src.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,36 @@
+# showcase.vect — designed to impress
+# Shows off the things that make Vect different from other languages.
+
+print("=== Vect Showcase ===")
+
+# --- Vectors feel like first-class values ---
+var gravity = [0.0, -9.81, 0.0]
+var velocity = [10.0, 15.0, 0.0]
+var position = velocity + gravity
+print(position)
+
+# --- Matrix operations with clean syntax ---
+var transform = [[0.0, -1.0], [1.0, 0.0]]   # 90° rotation matrix
+var point     = [[1.0], [0.0]]               # column vector
+var rotated   = transform @ point
+print(rotated)
+
+# --- Symbolic math built right in ---
+sym kinetic(v) = 0.5 * 1.0 * v**2           # KE = 0.5 * m * v^2, m=1kg
+var dKE = d/dv(kinetic(v))                   # derivative w.r.t. velocity
+print(dKE)
+
+# At v = 5 m/s, the rate of change of KE w.r.t. v is:
+var rate = eval(dKE, v=5.0)
+print(rate)
+
+# --- Recursive algorithm ---
+fn factorial(n: int) -> int {
+    if n <= 1 {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+print(factorial(10))
+
+print("=== Done ===")
