@@ -13,12 +13,12 @@
 
 <br/>
 
-[![Tests](https://img.shields.io/badge/Tests-138%20Passing-00C853?style=for-the-badge&logo=pytest&logoColor=white)](./tests)
+[![Tests](https://img.shields.io/badge/Tests-154%20Passing-00C853?style=for-the-badge&logo=pytest&logoColor=white)](./tests)
 [![CI](https://github.com/Eddiegah/Vect/actions/workflows/test.yml/badge.svg?style=for-the-badge)](https://github.com/Eddiegah/Vect/actions/workflows/test.yml)
 [![Python](https://img.shields.io/badge/Python-3.9%20–%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![LLVM](https://img.shields.io/badge/LLVM-Native%20Codegen-262D3A?style=for-the-badge&logo=llvm&logoColor=white)](https://llvm.org)
 [![License](https://img.shields.io/badge/License-MIT-FF6F00?style=for-the-badge)](./LICENSE)
-[![Version](https://img.shields.io/badge/Version-0.1.0-7C4DFF?style=for-the-badge)](https://github.com/Eddiegah/Vect/releases)
+[![Version](https://img.shields.io/badge/Version-2.0.0-7C4DFF?style=for-the-badge)](https://github.com/Eddiegah/Vect/releases)
 
 <br/>
 
@@ -33,7 +33,7 @@
 Every scientific language makes you do this:
 
 ```python
-# Python — you're always aware of the library seams
+# Python — library seams everywhere
 import numpy as np
 import sympy as sp
 
@@ -54,28 +54,34 @@ print(eval(d/dx(f(x)), x=2.0))   # 7.0
 
 `d/dx` is not a function call — it is a **language operator**, like `+` or `*`.
 `[1, 2, 3]` is a vector **literal**, as native as the number `42`.
-`@` is matrix multiply. `·` is dot product. No imports. No library names. Just the language.
+`@` is matrix multiply. `·` is dot product. `integral()` integrates.
+No imports. No library names. Just the language.
 
-> Vect compiles to real **native x86-64 machine code** via LLVM — the same backend used by Clang, Rust, and Swift. Not an interpreter. Not a transpiler. A real compiler.
+> Vect compiles to **real native x86-64 machine code** via LLVM — the same backend used by Clang, Rust, and Swift. Not an interpreter. Not a transpiler. A genuine compiler with `vect build` producing standalone executables.
 
 ---
 
-## ✨ Feature Highlights
+## ✨ What Vect Can Do
 
-| Feature | What it looks like |
-|---------|-------------------|
-| **Native vectors** | `var v = [1.0, 2.0, 3.0]` |
-| **Element-wise ops** | `v1 + v2`, `v1 * 2.0`, `v1 - v2` |
-| **Dot product** | `v1 · v2` → `32.0` |
-| **Matrix multiply** | `A @ B` |
-| **Transpose** | `T(A)` |
-| **Symbolic function** | `sym f(x) = x**2 + 3*x` |
-| **Differentiation** | `d/dx(f(x))` → `2*x + 3` |
-| **Evaluate** | `eval(df, x=2.0)` → `7.0` |
-| **Recursion** | `fn fib(n: int) -> int { ... }` |
-| **Type checker** | Catches errors before running, plain-English messages |
-| **REPL** | Interactive session with persistent state |
-| **VS Code highlighting** | Included and auto-installed |
+| Feature | Syntax | Example |
+|---------|--------|---------|
+| Native vectors | `[1.0, 2.0, 3.0]` | `var v = [1.0, 2.0, 3.0]` |
+| Element-wise ops | `v1 + v2`, `v * 2.0` | `print(v1 + v2)` → `[5, 7, 9]` |
+| Dot product | `v1 · v2` | `print(v1 · v2)` → `32.0` |
+| Cross product | `cross(a, b)` | `print(cross(a, b))` → `[0, 0, 1]` |
+| Vector norm | `norm(v)` | `print(norm([3.0,4.0,0.0]))` → `5.0` |
+| Matrix multiply | `A @ B` | `print(A @ B)` → `[[19,22],[43,50]]` |
+| Transpose | `T(A)` | `print(T(A))` |
+| Determinant | `det(A)` | `print(det(A))` → `-2.0` |
+| Inverse | `inv(A)` | `var Ainv = inv(A)` |
+| Solve Ax=b | `solve(A, b)` | `var x = solve(A, b)` |
+| Differentiation | `d/dx(f(x))` | `var df = d/dx(f(x))` → `2*x + 3` |
+| Symbolic eval | `eval(df, x=2.0)` | `print(eval(df, x=2.0))` → `7.0` |
+| Integration | `integral(f(x), "x", 0, 3)` | `print(integral(f(x), "x", 0.0, 3.0))` → `9.0` |
+| Plot | `plot(f(x), x, lo, hi)` | Saves `vect_plot.png` |
+| f-strings | `f"Hello {name}!"` | `print(f"Score: {score}")` |
+| AOT compile | `vect build file.vect` | Produces `.exe` |
+| REPL | `vect` | Interactive session |
 
 ---
 
@@ -85,15 +91,16 @@ print(eval(d/dx(f(x)), x=2.0))   # 7.0
 
 | | Requirement | Notes |
 |--|------------|-------|
-| ✅ | Python **3.11** (3.9–3.12) | 3.13+ not yet supported |
+| ✅ | Python **3.11** (3.9–3.12 supported) | 3.13+ not yet supported |
 | ✅ | Git | For cloning |
 | ✅ | VS Code | Optional, for syntax highlighting |
+| ✅ | gcc (MSYS2) | Only needed for `vect build` (AOT) |
 
-> **Windows users:** No C++ compiler, no Visual Studio, no CMake needed. `llvmlite` ships as a prebuilt wheel.
+> **Windows users:** No Visual Studio or CMake needed for JIT mode. `llvmlite` ships as a prebuilt wheel.
 
 ---
 
-### Option A — One-shot setup (Windows, recommended)
+### Option A — One-shot setup (Windows)
 
 ```powershell
 git clone https://github.com/Eddiegah/Vect.git
@@ -101,11 +108,11 @@ cd Vect
 .\setup_vect.ps1
 ```
 
-That's it. The script creates the virtualenv, installs all dependencies, verifies LLVM, and installs VS Code highlighting automatically.
+Creates the virtualenv, installs all dependencies, verifies LLVM, and installs VS Code highlighting automatically.
 
 ---
 
-### Option B — Step by step
+### Option B — Manual (Windows / macOS / Linux)
 
 ```bash
 # 1. Clone
@@ -125,7 +132,7 @@ pip install -r requirements.txt
 pip install -e .
 
 # 5. Verify
-python -c "import llvmlite.binding as llvm; llvm.initialize(); llvm.initialize_native_target(); llvm.initialize_native_asmprinter(); print('✓ LLVM OK')"
+python -c "import llvmlite.binding as llvm; llvm.initialize(); llvm.initialize_native_target(); llvm.initialize_native_asmprinter(); print('LLVM OK')"
 ```
 
 ---
@@ -140,180 +147,112 @@ Copy-Item -Recurse vscode-extension "$env:USERPROFILE\.vscode\extensions\vect-la
 cp -r vscode-extension ~/.vscode/extensions/vect-lang-0.1.0
 ```
 
-Restart VS Code — open any `.vect` file and it's highlighted automatically.
+Restart VS Code — open any `.vect` file and it highlights automatically.
 
 ---
 
 ## 🚀 Quickstart
 
-### Run a program
+### The REPL
 
 ```powershell
-# Windows
-venv\Scripts\vect run examples\demo.vect
-
-# macOS / Linux
-venv/bin/vect run examples/demo.vect
+venv\Scripts\vect        # Windows
+venv/bin/vect            # macOS / Linux
 ```
 
 ```
---- 1. Functions & Recursion ---
-55
---- 2. Native Vectors ---
-[4, 1, 4, 2, 5]
-4.0
---- 3. Matrix Multiply ---
-[
-  [0],
-  [1]
-]
---- 4. Symbolic Differentiation ---
-3*x**2 - 4*x + 1
-0.0
-5.0
---- 5. Physics: Projectile ---
-10.0 - 9.8*t
-10.0
-Done.
-```
-
-### Start the REPL
-
-```
-venv\Scripts\vect
-```
-
-```
-__   __       _
-\ \ / /__ ___| |_
- \ V / -_) _|  _|
-  \_/\___\__|\__|
-
-Vect 0.1.0 — a language with native scientific computing
-Type 'help' for tips, 'exit' to quit.
-
-vect> var v = [3.0, 1.0, 4.0]
-vect> print(v * 2.0)
-[6, 2, 8]
+vect> var v = [1.0, 2.0, 3.0]
+vect> print(v · [4.0, 5.0, 6.0])
+32.0
 vect> sym f(x) = x**3 - x
 vect> print(eval(d/dx(f(x)), x=2.0))
 11.0
 vect> exit
-Bye!
 ```
 
-Variables and functions you define persist across lines — the REPL remembers your full session.
+### Run a file
+
+```powershell
+venv\Scripts\vect run examples\demo.vect
+venv\Scripts\vect run examples\calculus_v2.vect
+venv\Scripts\vect run examples\plot_demo.vect     # generates vect_plot.png
+```
+
+### Build a native executable
+
+```powershell
+venv\Scripts\vect build examples\fibonacci.vect -o fib
+.\fib.exe
+# Output: 0 1 1 2 3 5 8 13 21 34 55
+```
+
+### Check and inspect
+
+```powershell
+venv\Scripts\vect check myprogram.vect   # type-check only
+venv\Scripts\vect ir    myprogram.vect   # dump LLVM IR
+```
 
 ---
 
 ## 📖 Language Tour
 
-### Variables & Types
+### Variables
 
 ```vect
-var age    = 21            # int
-var height = 1.82          # float
-var name   = "Vect"        # string
-var ready  = true          # bool
+var age    = 21
+var pi     = 3.14159
+var name   = "Vect"
+var active = true
 
 # Optional type annotations
 var count: int   = 0
 var ratio: float = 1.0 / 3.0
 ```
 
-**Type conversion**
+### F-strings *(v2)*
 
 ```vect
-var n = int(3.99)          # → 3      (truncates)
-var f = float(7)           # → 7.0
-var s = str(42)            # → "42"
+var name  = "Eddie"
+var score = 95
+print(f"Hello, {name}!")               # Hello, Eddie!
+print(f"Score: {score}, Grade: A")     # Score: 95, Grade: A
+print(f"Double: {score * 2}")          # Double: 190
 ```
 
----
-
-### Arithmetic
+### Arithmetic & Operators
 
 ```vect
-print(2 + 3 * 4)           # 14  — standard precedence
-print((2 + 3) * 4)         # 20  — parentheses override
-print(2.0 ** 10.0)         # 1024.0  — exponentiation
-print(17 % 5)              # 2        — modulo
-print(-42)                 # -42      — unary negation
+print(2 + 3 * 4)        # 14  — standard precedence
+print((2 + 3) * 4)      # 20
+print(2.0 ** 10.0)      # 1024.0
+print(17 % 5)           # 2
 ```
-
-**Operator precedence (highest → lowest)**
-
-| Level | Operators | Note |
-|-------|-----------|------|
-| 1 | `**` | Right-associative |
-| 2 | `* / % @ ·` | |
-| 3 | `+ -` | |
-| 4 | `== != < <= > >=` | |
-| 5 | `not` | |
-| 6 | `and` | Short-circuit |
-| 7 | `or` | Short-circuit |
-
----
 
 ### Control Flow
 
 ```vect
-# if / else if / else
-if score >= 90 {
-    print("A")
-} else if score >= 80 {
-    print("B")
-} else {
-    print("C")
-}
+if score >= 90 { print("A") }
+else if score >= 80 { print("B") }
+else { print("C") }
 
-# while loop
 var i = 1
 var total = 0
-while i <= 100 {
-    total = total + i
-    i = i + 1
-}
-print(total)   # 5050
+while i <= 100 { total = total + i\ni = i + 1 }
+print(total)    # 5050
 
-# for loop — iterates over a vector
-for x in [1.0, 4.0, 9.0, 16.0] {
-    print(sqrt(x))         # 1, 2, 3, 4
-}
-
-# break and continue
-var n = 0
-while true {
-    n = n + 1
-    if n % 2 == 0 { continue }
-    if n > 9      { break    }
-    print(n)               # 1 3 5 7 9
-}
+for x in [1.0, 4.0, 9.0] { print(sqrt(x)) }  # 1, 2, 3
 ```
 
----
-
-### Functions
+### Functions & Recursion
 
 ```vect
-fn add(a: int, b: int) -> int {
-    return a + b
-}
-
 fn factorial(n: int) -> int {
     if n <= 1 { return 1 }
-    return n * factorial(n - 1)   # recursion works
+    return n * factorial(n - 1)
 }
-
-fn greet(name: string) {          # void — no return type
-    print("Hello, " + name + "!")
-}
-
 print(factorial(10))   # 3628800
-greet("Eddie")         # Hello, Eddie!
 ```
-
-> Functions can call each other regardless of definition order — the compiler does a first-pass registration of all signatures.
 
 ---
 
@@ -323,24 +262,20 @@ greet("Eddie")         # Hello, Eddie!
 var a = [1.0, 2.0, 3.0]
 var b = [4.0, 5.0, 6.0]
 
-print(a + b)           # [5, 7, 9]      element-wise add
-print(a - b)           # [-3, -3, -3]   element-wise subtract
-print(a * b)           # [4, 10, 18]    element-wise multiply
-print(a * 3.0)         # [3, 6, 9]      scalar scale
-print(a · b)           # 32.0           dot product ← native operator
-print(a[0])            # 1.0            zero-based index
-print(len(a))          # 3              length
+print(a + b)             # [5, 7, 9]
+print(a * 3.0)           # [3, 6, 9]
+print(a · b)             # 32.0  (dot product)
+print(norm(a))           # 3.74166  (magnitude)
+print(normalize(a))      # [0.267, 0.535, 0.802]
 
-a[1] = 99.0            # modify element
-print(a)               # [1, 99, 3]
+var c = cross(a, b)      # 3D cross product
+print(c)                 # [0, 0, 0]  (parallel vectors → zero)
 
-# Iterate
-for x in a {
-    print(x * x)
-}
+print(zeros(4))          # [0, 0, 0, 0]
+print(ones(3))           # [1, 1, 1]
+print(a[0])              # 1.0
+print(len(a))            # 3
 ```
-
-> **Typing `·`:** Copy from here, or press `Alt+0183` on Windows numpad.
 
 ---
 
@@ -350,104 +285,109 @@ for x in a {
 var A = [[1.0, 2.0], [3.0, 4.0]]
 var B = [[5.0, 6.0], [7.0, 8.0]]
 
-print(A @ B)           # [[19,22],[43,50]]   matrix multiply
-print(T(A))            # [[1,3],[2,4]]        transpose
-print(A + B)           # [[6,8],[10,12]]      element-wise
-print(A * 2.0)         # [[2,4],[6,8]]        scalar scale
+print(A @ B)             # [[19,22],[43,50]]  matrix multiply
+print(T(A))              # [[1,3],[2,4]]       transpose
+print(det(A))            # -2.0               determinant
+print(inv(A))            # [[-2,1],[1.5,-0.5]] inverse
+
+# Solve Ax = b
+var b2 = [1.0, 0.0]
+var x = solve(A, b2)
+print(x)                 # [-2, 1.5]
 
 # 90° rotation
 var R = [[0.0, -1.0], [1.0, 0.0]]
 var p = [[1.0], [0.0]]
-print(R @ p)           # [[0],[1]]  — (1,0) rotated to (0,1)
-
-# Row access
-var row = A[0]         # returns [1, 2] as a vec
+print(R @ p)             # [[0],[1]]
 ```
 
 ---
 
 ### ⭐⭐ Symbolic Differentiation
 
-> This is what makes Vect unlike anything else. `d/dx` is a real language operator.
-
 ```vect
-# Step 1 — define a symbolic function
 sym f(x) = x**2 + 3*x + 1
 
-# Step 2 — differentiate
 var df = d/dx(f(x))
 print(df)                    # 2*x + 3
-
-# Step 3 — evaluate numerically
-print(eval(df, x=0.0))       # 3.0
 print(eval(df, x=2.0))       # 7.0
-```
+print(eval(df, x=0.0))       # 3.0
 
-**Any variable name works after `d/d`:**
-
-```vect
-# Free-fall under gravity
+# Physics — free fall
 sym height(t) = 20.0*t - 4.9*t**2
 var velocity = d/dt(height(t))
 print(velocity)              # 20.0 - 9.8*t
-print(eval(velocity, t=2.0)) # 0.4  (nearly at peak)
+print(eval(velocity, t=2.0)) # 0.4
 
 # Kinetic energy — derivative IS momentum
 sym KE(v) = 0.5 * 2.0 * v**2
 var p = d/dv(KE(v))
 print(p)                     # 2.0*v
-print(eval(p, v=10.0))       # 20.0 kg·m/s
+print(eval(p, v=10.0))       # 20.0
+```
 
-# Circle: derivative of area IS circumference
-sym area(r) = 3.14159 * r**2
-var circ = d/dr(area(r))
-print(eval(circ, r=5.0))     # 31.4159
+---
+
+### ⭐⭐ Symbolic Integration *(v2)*
+
+```vect
+# Definite integral — area under curve
+sym f(x) = x**2
+var area = integral(f(x), "x", 0.0, 3.0)
+print(area)              # 9.0
+
+# Work done by variable force F(x) = 2x + 1
+sym force(x) = 2.0*x + 1.0
+var work = integral(force(x), "x", 0.0, 5.0)
+print(work)              # 30.0
+
+# Indefinite integral — returns symbolic antiderivative
+var F = integral(f(x), "x")
+print(eval(F, x=3.0))    # 9.0
+```
+
+---
+
+### ⭐ Plot *(v2)*
+
+```vect
+# Plot any symbolic function — saves vect_plot.png
+sym wave(x) = sin(x) * 2.0
+plot(wave(x), x, -6.28, 6.28, "Sine Wave")
+
+# Plot two data vectors
+var xs = [0.0, 1.0, 2.0, 3.0, 4.0]
+var ys = [0.0, 1.0, 4.0, 9.0, 16.0]
+plot_xy(xs, ys, "x squared")
 ```
 
 ---
 
 ### Built-in Functions
 
-| Function | Input | Returns | Example |
-|----------|-------|---------|---------|
-| `print(x)` | any | void | `print("hi")` |
-| `input()` | — | string | `var s = input()` |
-| `len(v)` | vec | int | `len([1,2,3])` → `3` |
-| `sqrt(x)` | float | float | `sqrt(9.0)` → `3.0` |
-| `sin(x)` | float (rad) | float | `sin(0.0)` → `0.0` |
-| `cos(x)` | float (rad) | float | `cos(0.0)` → `1.0` |
-| `tan(x)` | float (rad) | float | `tan(0.785)` → `≈1.0` |
-| `abs(x)` | float | float | `abs(-5.5)` → `5.5` |
-| `floor(x)` | float | int | `floor(3.9)` → `3` |
-| `ceil(x)` | float | int | `ceil(3.1)` → `4` |
-| `int(x)` | numeric | int | `int(3.7)` → `3` |
-| `float(x)` | numeric | float | `float(7)` → `7.0` |
-| `str(x)` | numeric | string | `str(42)` → `"42"` |
-| `range(n)` | int | vec | `range(4)` → `[0,1,2,3]` |
-| `T(m)` | mat | mat | transpose |
-| `eval(e, v=n)` | sym, binding | float | `eval(df, x=2.0)` |
-
----
-
-### Error Messages That Help
-
-```vect
-print("price: " + 9.99)
-```
-```
-  ⚠  Type Error
-  Type error at line 1, col 16: Cannot use '+' between a string and a 'float'.
-  To concatenate, convert to string first with str(...).
-```
-
-```vect
-print(undeclared)
-```
-```
-  ⚠  Type Error
-  Type error at line 1, col 7: 'undeclared' is not defined.
-  Check the spelling or make sure you declared it with 'var'.
-```
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `print(x)` | void | Print any value |
+| `input()` | string | Read line from stdin |
+| `len(v)` | int | Length of vector |
+| `sqrt/sin/cos/tan(x)` | float | Math functions |
+| `abs/floor/ceil(x)` | float/int | Rounding |
+| `int/float/str(x)` | converted | Type conversion |
+| `range(n)` | vec | `[0,1,...,n-1]` |
+| `T(m)` | mat | Transpose |
+| `norm(v)` | float | Vector magnitude |
+| `cross(a,b)` | vec | 3D cross product |
+| `normalize(v)` | vec | Unit vector |
+| `det(A)` | float | Determinant |
+| `inv(A)` | mat | Matrix inverse |
+| `solve(A,b)` | vec | Solve Ax=b |
+| `zeros(n)` | vec | Zero vector |
+| `ones(n)` | vec | Ones vector |
+| `eval(e,v=n)` | float | Evaluate symbolic expr |
+| `integral(f,v,lo,hi)` | float | Definite integral |
+| `integral(f,v)` | sym | Indefinite integral |
+| `plot(f,v,lo,hi)` | void | Save function plot PNG |
+| `plot_xy(x,y)` | void | Save data plot PNG |
 
 ---
 
@@ -455,131 +395,106 @@ print(undeclared)
 
 | File | What it demonstrates |
 |------|----------------------|
-| `examples/demo.vect` | Everything — **start here for live demos** |
-| `examples/fibonacci.vect` | Recursive functions, while loop |
-| `examples/control_flow.vect` | if/else, for, break, grade calculator |
-| `examples/linear_system.vect` | Vectors, dot product, matrix operations |
-| `examples/symbolic_derivative.vect` | `sym`, `d/dx`, `eval`, physics formulas |
-| `examples/showcase.vect` | KE, rotation matrix, factorial, projectile |
-| `examples/tour_01_arithmetic.vect` | Hands-on: variables & arithmetic |
-| `examples/tour_02_control_flow.vect` | Hands-on: if/while/for/break |
-| `examples/tour_03_functions.vect` | Hands-on: functions & recursion |
-| `examples/tour_04_vectors.vect` | Hands-on: all vector operations |
-| `examples/tour_05_matrices.vect` | Hands-on: matrix ops & rotation |
-| `examples/tour_06_symbolic.vect` | Hands-on: full symbolic calculus tour |
+| `examples/demo.vect` | **Everything — start here for live demos** |
+| `examples/fibonacci.vect` | Recursive functions |
+| `examples/control_flow.vect` | if/else, loops, grade logic |
+| `examples/linear_system.vect` | Vectors, dot product, matrices |
+| `examples/symbolic_derivative.vect` | d/dx, eval, physics |
+| `examples/showcase.vect` | KE, rotation, factorial |
+| `examples/calculus_v2.vect` | Integration, differentiation v2 |
+| `examples/stdlib_test.vect` | norm, cross, det, inv, solve |
+| `examples/plot_demo.vect` | plot() generating PNG output |
+| `examples/fstring_test.vect` | f-string interpolation |
+| `examples/tour_01_arithmetic.vect` | Hands-on: variables |
+| `examples/tour_02_control_flow.vect` | Hands-on: if/while/for |
+| `examples/tour_03_functions.vect` | Hands-on: functions |
+| `examples/tour_04_vectors.vect` | Hands-on: vector ops |
+| `examples/tour_05_matrices.vect` | Hands-on: matrix ops |
+| `examples/tour_06_symbolic.vect` | Hands-on: calculus |
 
 ---
 
 ## 🛠 CLI Reference
 
-| Command | What it does |
+| Command | Description |
 |---------|-------------|
-| `vect` | Start the interactive REPL |
-| `vect run <file.vect>` | Compile and run a program |
+| `vect` | Start interactive REPL |
+| `vect run <file.vect>` | Compile and run |
+| `vect build <file.vect> [-o name]` | **AOT compile to .exe** |
 | `vect check <file.vect>` | Type-check without running |
-| `vect ir <file.vect>` | Dump generated LLVM IR |
-
-**See the actual machine-level IR your code compiles to:**
-
-```powershell
-vect ir examples/fibonacci.vect
-```
-
-```llvm
-define i64 @"vect_user_fib"(i64 %"n") {
-entry:
-  %"n.1" = alloca i64
-  store i64 %"n", i64* %"n.1"
-  ...
-  %".8" = call i64 @"vect_user_fib"(i64 %".7")   ← recursive call
-  %".11" = add i64 %".8", %".10"
-  ret i64 %".11"
-}
-```
-
-The same IR format used by Clang, Rust, and Swift.
+| `vect ir <file.vect>` | Dump LLVM IR |
 
 ---
 
 ## 🏗️ How the Compiler Works
 
-Vect is a complete, real compiler. Every stage is hand-written and documented.
-
 ```
-  source.vect  ──────────────────────────────────────────────────┐
-                                                                  │
-  ┌─────────────────────────────────────────────────────────┐    │
-  │  LEXER   src/lexer.py                                   │ ◄──┘
-  │  Text → token stream                                    │
-  │  Handles: d/dx  ·  @  **  keywords  strings  numbers   │
-  └───────────────────────┬─────────────────────────────────┘
-                          │ tokens
-  ┌───────────────────────▼─────────────────────────────────┐
-  │  PARSER   src/parser.py                                 │
-  │  Tokens → Abstract Syntax Tree (25 node types)         │
-  │  7-level operator precedence, right-assoc **            │
-  └───────────────────────┬─────────────────────────────────┘
-                          │ AST
-  ┌───────────────────────▼─────────────────────────────────┐
-  │  TYPE CHECKER   src/type_checker.py                     │
-  │  Infers types, catches mismatches before codegen        │
-  │  Plain-English errors with exact line + column          │
-  └───────────────────────┬─────────────────────────────────┘
-                          │ verified AST
-  ┌───────────────────────▼─────────────────────────────────┐
-  │  CODE GENERATOR   src/codegen.py                        │
-  │  AST → LLVM IR via llvmlite                             │
-  │  Variables: alloca / load / store  (SSA pattern)        │
-  │  Control flow: explicit basic-block jumps               │
-  │  Vec/mat ops: calls to Python runtime via ctypes        │
-  │  d/dx: sympy at runtime, result stored as sym object    │
-  └───────────────────────┬─────────────────────────────────┘
-                          │ LLVM IR
-  ┌───────────────────────▼─────────────────────────────────┐
-  │  LLVM MCJIT   (llvmlite binding)                        │
-  │  IR → native x86-64 machine code, runs immediately      │
-  │  Same backend as Clang, Rust, Swift                     │
-  └───────────────────────┬─────────────────────────────────┘
-                          │ machine code ↔ callbacks
-  ┌───────────────────────▼─────────────────────────────────┐
-  │  RUNTIME   src/runtime.py                               │
-  │  Python ctypes callbacks for vec / mat / sym operations │
-  │  Object registry: int IDs map to Python objects         │
-  │  sympy handles symbolic math — completely transparent   │
-  └─────────────────────────────────────────────────────────┘
+  source.vect
+      │
+  ┌───▼──────────────────────────────────────────────────────┐
+  │  LEXER  src/lexer.py                                     │
+  │  Text → tokens.  Handles d/dx  ·  @  **  f"..."         │
+  └───┬──────────────────────────────────────────────────────┘
+      │
+  ┌───▼──────────────────────────────────────────────────────┐
+  │  PARSER  src/parser.py                                   │
+  │  Tokens → AST (25 node types, 7 precedence levels)      │
+  └───┬──────────────────────────────────────────────────────┘
+      │
+  ┌───▼──────────────────────────────────────────────────────┐
+  │  TYPE CHECKER  src/type_checker.py                       │
+  │  Infers types, catches errors, plain-English messages    │
+  └───┬──────────────────────────────────────────────────────┘
+      │
+  ┌───▼──────────────────────────────────────────────────────┐
+  │  CODE GENERATOR  src/codegen.py                          │
+  │  AST → LLVM IR via llvmlite                              │
+  │  Variables: alloca/load/store (SSA)                      │
+  │  Loops/branches: explicit basic blocks                   │
+  │  Vec/mat/sym: runtime calls via ctypes                   │
+  └───┬──────────────────────────────────────────────────────┘
+      │
+  ┌───▼──────────────────────────────────────────────────────┐
+  │  JIT (vect run)            AOT (vect build)              │
+  │  llvmlite MCJIT            Object file + gcc link        │
+  │  Runs in-process           Produces standalone .exe      │
+  └───┬──────────────────────────────────────────────────────┘
+      │
+  ┌───▼──────────────────────────────────────────────────────┐
+  │  RUNTIME  src/runtime.py                                 │
+  │  Python ctypes callbacks for vec/mat/sym/plot            │
+  │  Object registry: int IDs → Python objects              │
+  │  sympy: diff, integrate — completely hidden from user    │
+  │  matplotlib: plot() — saves PNG                         │
+  └──────────────────────────────────────────────────────────┘
 ```
 
-### Why these choices?
+### Design decisions
 
 | Decision | Reason |
 |----------|--------|
-| `llvmlite` over C++ LLVM | Prebuilt wheel — `pip install` just works on Windows, no Visual Studio or CMake |
-| Python runtime for vec/mat | Correct, readable, easy to extend — no raw pointer arithmetic in IR |
-| sympy for symbolic diff | Full CAS in one pip package; the language hides it completely |
-| Recursive descent parser | Easiest to understand and extend; handles all precedence levels cleanly |
-| Static type checker | Catches errors early with helpful messages instead of cryptic crashes |
+| `llvmlite` not C++ LLVM | Prebuilt wheel — `pip install` works with no C++ toolchain |
+| Python runtime for vec/mat | Correct, readable, easy to extend |
+| sympy for diff/integrate | Full CAS in one package, hidden behind language syntax |
+| matplotlib for plot | Zero setup, outputs clean PNG |
+| AOT via gcc | MSYS2 gcc is the most available linker on Windows |
 
 ---
 
 ## 🧪 Tests
 
-**138 tests across three files — every layer of the compiler covered.**
-
 ```powershell
-venv\Scripts\pytest tests/ -v        # full output
-venv\Scripts\pytest tests/ -q        # summary only
+venv\Scripts\pytest tests/ -q     # 154 tests, ~5 seconds
 ```
 
 | File | What it covers | Count |
 |------|---------------|-------|
-| `test_lexer.py` | All token types, positions, `d/dx`, `·`, error chars | 39 |
-| `test_parser.py` | All 25 AST node types, precedence, all example files | 47 |
-| `test_end_to_end.py` | Compile → JIT → run → assert exact stdout | 52 |
-
-The end-to-end tests compile real Vect programs to machine code, execute them, capture stdout, and assert byte-for-byte. If anything in the pipeline breaks anywhere, a test catches it.
+| `test_lexer.py` | Tokens, positions, f-strings, operators | 39 |
+| `test_parser.py` | All 25 AST node types, precedence | 47 |
+| `test_end_to_end.py` | Compile → JIT → run → assert stdout | 68 |
 
 ```
-======================== 138 passed in 1.21s ========================
+======================== 154 passed in 5.10s ========================
 ```
 
 ---
@@ -588,58 +503,43 @@ The end-to-end tests compile real Vect programs to machine code, execute them, c
 
 ```
 Vect/
+├── src/
+│   ├── lexer.py              Tokenizer (f-strings, d/dx, ·, @)
+│   ├── ast_nodes.py          25 AST node dataclasses
+│   ├── parser.py             Recursive-descent parser
+│   ├── type_checker.py       Static type checker
+│   ├── codegen.py            LLVM IR code generator
+│   ├── runtime.py            Python ctypes runtime
+│   ├── aot.py                AOT compiler (vect build)
+│   ├── pipeline.py           Compilation pipeline
+│   ├── repl.py               Interactive REPL
+│   └── main.py               CLI (vect command)
 │
-├── src/                         ← The compiler — read this!
-│   ├── lexer.py                   Tokenizer (text → token stream)
-│   ├── ast_nodes.py               25 AST node dataclasses
-│   ├── parser.py                  Recursive-descent parser
-│   ├── type_checker.py            Static type checker
-│   ├── codegen.py                 LLVM IR code generator
-│   ├── runtime.py                 Python ctypes runtime
-│   ├── pipeline.py                Compilation pipeline glue
-│   ├── repl.py                    Interactive REPL
-│   └── main.py                    CLI entry point
-│
-├── examples/                    ← Start here
-│   ├── demo.vect                  Full demo — best for live use
-│   ├── fibonacci.vect             Recursive functions
-│   ├── control_flow.vect          if/else, loops, grade logic
-│   ├── linear_system.vect         Vectors, dot product, matrices
+├── examples/
+│   ├── demo.vect             Full demo — best for presentations
+│   ├── fibonacci.vect        Recursion
+│   ├── linear_system.vect    Vectors & matrices
 │   ├── symbolic_derivative.vect   d/dx, eval, physics
-│   ├── showcase.vect              Everything together
-│   ├── tour_01_arithmetic.vect    Hands-on: variables
-│   ├── tour_02_control_flow.vect  Hands-on: if/while/for
-│   ├── tour_03_functions.vect     Hands-on: functions
-│   ├── tour_04_vectors.vect       Hands-on: vector ops
-│   ├── tour_05_matrices.vect      Hands-on: matrix ops
-│   └── tour_06_symbolic.vect      Hands-on: d/dx tour
+│   ├── calculus_v2.vect      Integration (v2)
+│   ├── stdlib_test.vect      norm, cross, det, inv, solve
+│   ├── plot_demo.vect        plot() output
+│   ├── fstring_test.vect     f-string interpolation
+│   ├── tour_01 – tour_06.vect Hands-on learning programs
+│   └── showcase.vect         Everything at once
 │
-├── tests/                       ← 138 passing tests
-│   ├── test_lexer.py
-│   ├── test_parser.py
-│   └── test_end_to_end.py
-│
+├── tests/                    154 tests
 ├── docs/
-│   └── vect-language-guide.html  Complete language guide (save as PDF)
-│
-├── vscode-extension/            ← Syntax highlighting
-│   ├── package.json
-│   ├── language-configuration.json
-│   └── syntaxes/vect.tmLanguage.json
-│
+│   └── vect-language-guide.html  Full language guide (→ PDF)
+├── vscode-extension/         Syntax highlighting
 ├── scripts/
-│   ├── record_demo.py             Auto-runs a REPL session for recording
-│   └── RECORDING.md              Guide for creating demo GIFs
-│
-├── stdlib/
-│   └── math.vect                  clamp, lerp, sign, min_f, max_f
-│
-├── .github/workflows/test.yml   ← CI runs on every push
+│   ├── record_demo.py        Demo recording script
+│   └── RECORDING.md          GIF recording guide
+├── stdlib/math.vect          clamp, lerp, sign, min, max
+├── .github/workflows/test.yml CI on every push
 ├── requirements.txt
 ├── pyproject.toml
-├── setup_vect.ps1               One-shot Windows setup script
-├── LICENSE                      MIT
-└── README.md                    This file
+├── setup_vect.ps1            One-shot Windows setup
+└── LICENSE                   MIT
 ```
 
 ---
@@ -648,41 +548,41 @@ Vect/
 
 | Package | Version | Role |
 |---------|---------|------|
-| `llvmlite` | 0.43.0 | LLVM Python bindings — JIT compiler |
-| `sympy` | 1.13.1 | Symbolic math backend for `d/dx` |
+| `llvmlite` | 0.43.0 | LLVM Python bindings + JIT |
+| `sympy` | 1.13.1 | Symbolic math (d/dx, integral) |
+| `matplotlib` | ≥3.7.0 | plot() PNG output |
 | `click` | 8.1.7 | CLI framework |
 | `pytest` | 8.2.2 | Test runner |
-
-All installed with a single command: `pip install -r requirements.txt`
 
 ---
 
 ## 🗺️ Roadmap
 
-| Feature | Status |
-|---------|--------|
-| Core language (vars, functions, control flow) | ✅ Complete |
-| Native vectors with all operators | ✅ Complete |
-| Native matrices with `@` and `T()` | ✅ Complete |
-| Symbolic differentiation (`d/dx`, `eval`) | ✅ Complete |
-| Static type checker with helpful errors | ✅ Complete |
-| Interactive REPL with session persistence | ✅ Complete |
-| 138-test suite | ✅ Complete |
-| GitHub Actions CI | ✅ Complete |
-| VS Code syntax highlighting | ✅ Complete |
-| Complete language documentation | ✅ Complete |
-| Multi-file imports | 🔲 v2 |
-| AOT compilation to `.exe` | 🔲 v2 |
-| Richer standard library | 🔲 v2 |
-| Full type inference (no annotations) | 🔲 v2 |
+| Feature | Version | Status |
+|---------|---------|--------|
+| Core language + LLVM codegen | v1 | ✅ |
+| Vectors, matrices, dot product | v1 | ✅ |
+| Symbolic differentiation (d/dx) | v1 | ✅ |
+| REPL, CLI, type checker | v1 | ✅ |
+| 138-test suite, CI | v1 | ✅ |
+| f-string interpolation | **v2** | ✅ |
+| norm, cross, det, inv, solve | **v2** | ✅ |
+| Symbolic integration | **v2** | ✅ |
+| plot() / plot_xy() | **v2** | ✅ |
+| AOT compilation to .exe | **v2** | ✅ |
+| Multi-file imports | v3 | 🔲 |
+| Type inference (no annotations) | v3 | 🔲 |
+| Better error recovery | v3 | 🔲 |
+| Jupyter kernel | v3 | 🔲 |
+| Full static C runtime | v3 | 🔲 |
 
 ---
 
 ## 📄 Documentation
 
-The full language guide is at [`docs/vect-language-guide.html`](./docs/vect-language-guide.html) — open it in any browser and print to PDF for a complete offline reference.
+Full language guide at [`docs/vect-language-guide.html`](./docs/vect-language-guide.html)
 
-It covers all 18 topics from installation through the compiler internals, with worked examples for every feature.
+Open in any browser → **Ctrl+P → Save as PDF** for a complete offline reference covering all 18 topics from installation through the compiler internals.
 
 ---
 
@@ -694,8 +594,7 @@ It covers all 18 topics from installation through the compiler internals, with w
 
 <br/>
 
-*This project exists to prove three things:*
-*compiler construction is approachable,*
+*Built to prove that compiler construction is approachable,*
 *language design is a creative act,*
 *and scientific computing can be syntax — not scaffolding.*
 
@@ -703,13 +602,13 @@ It covers all 18 topics from installation through the compiler internals, with w
 
 ---
 
-**If Vect made you think differently about what a language can be — that's the whole point.**
+**If Vect made you think differently about what a programming language can be — that's the whole point.**
 
 ```
 venv\Scripts\vect run examples\demo.vect
 ```
 
-⭐ **Star the repo if you found this interesting.**
+⭐ **Star the repo if you found it interesting.**
 
 <br/>
 
