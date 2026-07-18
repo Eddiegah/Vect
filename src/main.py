@@ -72,8 +72,34 @@ def check(file):
 
 
 @cli.command()
+def notebook():
+    """Install the Vect Jupyter kernel and launch Jupyter."""
+    try:
+        from .kernel import install_kernel
+        install_kernel()
+        click.echo('\nLaunching Jupyter...')
+        import subprocess
+        subprocess.run([sys.executable, '-m', 'jupyter', 'notebook'], check=False)
+    except ImportError:
+        click.echo('Jupyter not installed. Run: pip install jupyter', err=True)
+        sys.exit(1)
+    except Exception as e:
+        _print_error(e)
+        sys.exit(1)
+
+
+@cli.command()
 @click.argument('file', type=click.Path(exists=True))
 def ir(file):
+    """Dump generated LLVM IR (useful for debugging / learning)."""
+    try:
+        with open(file, encoding='utf-8') as f:
+            source = f.read()
+        ir_text = get_ir(source, filename=file)
+        click.echo(ir_text)
+    except Exception as e:
+        _print_error(e)
+        sys.exit(1)
     """Dump generated LLVM IR (useful for debugging / learning)."""
     try:
         with open(file, encoding='utf-8') as f:
