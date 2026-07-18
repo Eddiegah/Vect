@@ -1,11 +1,13 @@
 {
   "name": "vect-lang",
   "displayName": "Vect Language",
-  "description": "Syntax highlighting for the Vect programming language",
-  "version": "0.1.0",
+  "description": "Syntax highlighting, autocomplete, and error checking for the Vect programming language",
+  "version": "2.0.0",
   "publisher": "vect-lang",
   "engines": { "vscode": "^1.60.0" },
   "categories": ["Programming Languages"],
+  "activationEvents": ["onLanguage:vect"],
+  "main": "./extension.js",
   "contributes": {
     "languages": [
       {
@@ -20,6 +22,12 @@
         "language": "vect",
         "scopeName": "source.vect",
         "path": "./syntaxes/vect.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "vect",
+        "path": "./snippets/vect.json"
       }
     ]
   }

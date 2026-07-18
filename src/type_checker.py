@@ -165,10 +165,11 @@ class TypeChecker:
         for node in program.body:
             try:
                 self._check_stmt(node, self.global_env)
+            except MultiTypeError as e:
+                errors.extend(e.errors)
             except TypeError as e:
                 errors.append(e)
             except Exception as e:
-                # Unexpected errors still propagate immediately
                 raise
 
         if errors:
@@ -346,19 +347,83 @@ class TypeChecker:
         param_types, ret_type = self.functions.get(node.name, ([], VOID))
         func_env = Env(parent=env)
         for p, t in zip(node.params, param_types):
-            # Use annotation if available, else use inferred or default to float
             actual_t = p.type_annotation if p.type_annotation else (
                 t if t != 'unknown' else FLOAT
             )
             func_env.define(p.name, actual_t)
         expected_ret = ret_type if ret_type != 'unknown' else VOID
         self._return_type_stack.append(expected_ret)
+
+        # Collect errors across every statement in the function body
+        body_errors = []
         for stmt in node.body:
             try:
                 self._check_stmt(stmt, func_env)
-            except TypeError:
-                pass  # body errors collected at top level
+            except TypeError as e:
+                body_errors.append(e)
+            except MultiTypeError as e:
+                body_errors.extend(e.errors)
+
         self._return_type_stack.pop()
+
+        if body_errors:
+            if len(body_errors) == 1:
+                raise body_errors[0]
+            raise MultiTypeError(body_errors)
+
+    def _check_if(self, node: If, env: Env):
+        cond_type = self._infer(node.condition, env)
+        if cond_type != BOOL and cond_type not in NUMERIC:
+            raise TypeError(
+                f"'if' condition must be a bool or numeric expression, "
+                f"but got '{cond_type}'.",
+                node.condition.line, node.condition.col
+            )
+        body_env = Env(parent=env)
+        for stmt in node.body:
+            try:
+                self._check_stmt(stmt, body_env)
+            except TypeError:
+                raise
+        if node.else_body:
+            else_env = Env(parent=env)
+            for stmt in node.else_body:
+                try:
+                    self._check_stmt(stmt, else_env)
+                except TypeError:
+                    raise
+
+    def _check_while(self, node: While, env: Env):
+        cond_type = self._infer(node.condition, env)
+        if cond_type != BOOL and cond_type not in NUMERIC:
+            raise TypeError(
+                f"'while' condition must be a bool or numeric expression, "
+                f"but got '{cond_type}'.",
+                node.condition.line, node.condition.col
+            )
+        body_env = Env(parent=env)
+        for stmt in node.body:
+            try:
+                self._check_stmt(stmt, body_env)
+            except TypeError:
+                raise
+
+    def _check_for(self, node: For, env: Env):
+        iter_type = self._infer(node.iterable, env)
+        if iter_type not in (VEC, MAT, STRING):
+            raise TypeError(
+                f"'for' loop can only iterate over vec, mat, or string, "
+                f"but got '{iter_type}'.",
+                node.iterable.line, node.iterable.col
+            )
+        body_env = Env(parent=env)
+        elem_type = FLOAT if iter_type in (VEC, MAT) else STRING
+        body_env.define(node.var, elem_type)
+        for stmt in node.body:
+            try:
+                self._check_stmt(stmt, body_env)
+            except TypeError:
+                raise
 
     def _check_if(self, node: If, env: Env):
         cond_type = self._infer(node.condition, env)

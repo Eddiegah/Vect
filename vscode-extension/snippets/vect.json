@@ -1,0 +1,111 @@
+{
+  "Variable declaration": {
+    "prefix": "var",
+    "body": ["var ${1:name} = ${2:value}"],
+    "description": "Declare a variable"
+  },
+  "Function definition": {
+    "prefix": "fn",
+    "body": [
+      "fn ${1:name}(${2:param}: ${3:type}) -> ${4:type} {",
+      "\t${5:return ${6:value}}",
+      "}"
+    ],
+    "description": "Define a function"
+  },
+  "Function (inferred)": {
+    "prefix": "fni",
+    "body": [
+      "fn ${1:name}(${2:param}) {",
+      "\t${3:return ${4:value}}",
+      "}"
+    ],
+    "description": "Define a function with inferred types"
+  },
+  "Symbolic function": {
+    "prefix": "sym",
+    "body": ["sym ${1:f}(${2:x}) = ${3:x**2}"],
+    "description": "Define a symbolic function"
+  },
+  "Differentiate": {
+    "prefix": "ddx",
+    "body": ["var ${1:df} = d/d${2:x}(${3:f}(${2:x}))"],
+    "description": "Symbolic differentiation"
+  },
+  "Evaluate symbolic": {
+    "prefix": "eval",
+    "body": ["eval(${1:expr}, ${2:x}=${3:0.0})"],
+    "description": "Evaluate a symbolic expression"
+  },
+  "Definite integral": {
+    "prefix": "intd",
+    "body": ["integral(${1:f}(${2:x}), \"${2:x}\", ${3:0.0}, ${4:1.0})"],
+    "description": "Definite integral"
+  },
+  "if statement": {
+    "prefix": "if",
+    "body": [
+      "if ${1:condition} {",
+      "\t${2}",
+      "}"
+    ],
+    "description": "if statement"
+  },
+  "if/else": {
+    "prefix": "ife",
+    "body": [
+      "if ${1:condition} {",
+      "\t${2}",
+      "} else {",
+      "\t${3}",
+      "}"
+    ],
+    "description": "if/else statement"
+  },
+  "while loop": {
+    "prefix": "while",
+    "body": [
+      "while ${1:condition} {",
+      "\t${2}",
+      "}"
+    ],
+    "description": "while loop"
+  },
+  "for loop": {
+    "prefix": "for",
+    "body": [
+      "for ${1:x} in ${2:collection} {",
+      "\t${3}",
+      "}"
+    ],
+    "description": "for loop"
+  },
+  "print f-string": {
+    "prefix": "pf",
+    "body": ["print(f\"${1:message}: {${2:value}}\")"],
+    "description": "Print with f-string"
+  },
+  "Vector literal": {
+    "prefix": "vec",
+    "body": ["var ${1:v} = [${2:1.0}, ${3:2.0}, ${4:3.0}]"],
+    "description": "Create a vector"
+  },
+  "Matrix literal": {
+    "prefix": "mat",
+    "body": [
+      "var ${1:A} = [[${2:1.0}, ${3:0.0}],",
+      "         [${4:0.0}, ${5:1.0}]]"
+    ],
+    "description": "Create a matrix"
+  },
+  "Import stdlib": {
+    "prefix": "import",
+    "body": ["import \"${1:stdlib/physics}.vect\""],
+    "description": "Import a library file"
+  },
+  "Plot function": {
+    "prefix": "plot",
+    "body": ["plot(${1:f}(${2:x}), ${2:x}, ${3:-3.14}, ${4:3.14}, \"${5:title}\")"],
+    "description": "Plot a symbolic function"
+  }
+}
