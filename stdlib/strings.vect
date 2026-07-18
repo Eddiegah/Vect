@@ -1,0 +1,42 @@
+# stdlib/strings.vect — String utility functions for Vect
+# import "stdlib/strings.vect"
+# These wrap the built-in string operations in convenient functions.
+
+fn is_empty(s: string) -> bool {
+    return str_len(s) == 0
+}
+
+fn pad_left(s: string, width: int) -> string {
+    var current = str_len(s)
+    var padding = width - current
+    if padding <= 0 { return s }
+    return str_repeat(" ", padding) + s
+}
+
+fn to_upper(s: string) -> string {
+    return str_upper(s)
+}
+
+fn to_lower(s: string) -> string {
+    return str_lower(s)
+}
+
+fn trim(s: string) -> string {
+    return str_trim(s)
+}
+
+fn replace(s: string, old: string, new: string) -> string {
+    return str_replace(s, old, new)
+}
+
+fn contains(s: string, sub: string) -> bool {
+    return str_contains(s, sub)
+}
+
+fn starts_with(s: string, prefix: string) -> bool {
+    return str_starts(s, prefix)
+}
+
+fn ends_with(s: string, suffix: string) -> bool {
+    return str_ends(s, suffix)
+}

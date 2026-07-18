@@ -1,0 +1,33 @@
+# stdlib/linalg.vect — Linear algebra utilities for Vect
+# import "stdlib/linalg.vect"
+
+fn identity(n: int) -> mat {
+    var A = zeros(n)
+    return A
+}
+
+fn mat_trace(A: mat) -> float {
+    var t = A[0][0] + A[1][1]
+    return t
+}
+
+fn vec_project(a: vec, b: vec) -> vec {
+    var scalar = (a · b) / (b · b)
+    return b * scalar
+}
+
+fn vec_angle_cos(a: vec, b: vec) -> float {
+    return (a · b) / (norm(a) * norm(b))
+}
+
+fn is_orthogonal(a: vec, b: vec) -> bool {
+    var dp = a · b
+    if dp < 0.0001 and dp > -0.0001 { return true }
+    return false
+}
+
+fn gram_schmidt_2d(a: vec, b: vec) -> vec {
+    var proj = vec_project(b, a)
+    var result = b - proj
+    return normalize(result)
+}

@@ -84,6 +84,13 @@ class Repl:
     def __init__(self):
         self._history: list[str] = []   # lines of accepted code
         self._rt = build_runtime()
+        # Enable readline for history navigation (up/down arrows)
+        try:
+            import readline
+            readline.set_history_length(500)
+            self._has_readline = True
+        except ImportError:
+            self._has_readline = False
         self._last_ir: str = ''
 
     def run(self):
@@ -121,10 +128,22 @@ class Repl:
 
     def _read_input(self) -> str:
         """
-        Read one logical statement, handling multi-line blocks.
-        Shows '...' prompt when inside an open brace block.
+        Read one logical statement with history navigation.
+        Up/down arrows cycle through command history.
+        Handles multi-line blocks (open braces).
         """
+        import readline as _rl
+        try:
+            # Try to use readline for history on Unix/Mac
+            pass
+        except ImportError:
+            pass
+
         line = input(_bold('vect') + _cyan('> '))
+        if line.strip():
+            self._cmd_history.append(line)
+            self._history_pos = len(self._cmd_history)
+
         if _count_open_braces(line) > 0:
             lines = [line]
             while _count_open_braces('\n'.join(lines)) > 0:

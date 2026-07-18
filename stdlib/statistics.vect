@@ -1,0 +1,38 @@
+# stdlib/statistics.vect — Statistical functions for Vect
+# import "stdlib/statistics.vect"
+# Requires: import "stdlib/vectors.vect" first
+
+fn variance(v: vec) -> float {
+    var n = len(v)
+    var m = vec_mean(v)
+    var sum_sq = 0.0
+    for x in v {
+        var diff = x - m
+        sum_sq = sum_sq + diff * diff
+    }
+    return sum_sq / float(n)
+}
+
+fn std_dev(v: vec) -> float {
+    return sqrt(variance(v))
+}
+
+fn median(v: vec) -> float {
+    var n = len(v)
+    var mid = n / 2
+    return v[mid]
+}
+
+fn range_stat(v: vec) -> float {
+    return vec_max(v) - vec_min(v)
+}
+
+fn sum_squares(v: vec) -> float {
+    var total = 0.0
+    for x in v { total = total + x * x }
+    return total
+}
+
+fn dot_self(v: vec) -> float {
+    return sum_squares(v)
+}

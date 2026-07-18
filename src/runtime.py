@@ -703,6 +703,45 @@ def _float_to_str(val: float) -> int:
         return _register(f'{val:.1f}')
     return _register(f'{val:.6g}')
 
+# --- New string operations (v4) ---
+
+def _str_deref(ptr: int) -> str:
+    """Helper: get Python string from a pointer (registry or C string)."""
+    obj = _registry.get(ptr)
+    if obj is not None:
+        return str(obj)
+    try:
+        return ctypes.string_at(ptr).decode('utf-8')
+    except Exception:
+        return ''
+
+def _str_len(ptr: int) -> int:
+    return len(_str_deref(ptr))
+
+def _str_upper(ptr: int) -> int:
+    return _register(_str_deref(ptr).upper())
+
+def _str_lower(ptr: int) -> int:
+    return _register(_str_deref(ptr).lower())
+
+def _str_contains(ptr: int, sub_ptr: int) -> bool:
+    return _str_deref(sub_ptr) in _str_deref(ptr)
+
+def _str_starts(ptr: int, prefix_ptr: int) -> bool:
+    return _str_deref(ptr).startswith(_str_deref(prefix_ptr))
+
+def _str_ends(ptr: int, suffix_ptr: int) -> bool:
+    return _str_deref(ptr).endswith(_str_deref(suffix_ptr))
+
+def _str_replace(ptr: int, old_ptr: int, new_ptr: int) -> int:
+    return _register(_str_deref(ptr).replace(_str_deref(old_ptr), _str_deref(new_ptr)))
+
+def _str_trim(ptr: int) -> int:
+    return _register(_str_deref(ptr).strip())
+
+def _str_repeat(ptr: int, n: int) -> int:
+    return _register(_str_deref(ptr) * n)
+
 # --- Range ---
 
 def _range_fn(start: int, stop: int, step: int) -> int:
@@ -807,6 +846,15 @@ def build_runtime() -> Dict[str, Any]:
     reg('vect_str_concat',   _str_concat,   C.c_void_p, C.c_void_p, C.c_void_p)
     reg('vect_int_to_str',   _int_to_str,   C.c_void_p, C.c_int64)
     reg('vect_float_to_str', _float_to_str, C.c_void_p, C.c_double)
+    reg('vect_str_len',      _str_len,      C.c_int64,  C.c_void_p)
+    reg('vect_str_upper',    _str_upper,    C.c_void_p, C.c_void_p)
+    reg('vect_str_lower',    _str_lower,    C.c_void_p, C.c_void_p)
+    reg('vect_str_contains', _str_contains, C.c_bool,   C.c_void_p, C.c_void_p)
+    reg('vect_str_starts',   _str_starts,   C.c_bool,   C.c_void_p, C.c_void_p)
+    reg('vect_str_ends',     _str_ends,     C.c_bool,   C.c_void_p, C.c_void_p)
+    reg('vect_str_replace',  _str_replace,  C.c_void_p, C.c_void_p, C.c_void_p, C.c_void_p)
+    reg('vect_str_trim',     _str_trim,     C.c_void_p, C.c_void_p)
+    reg('vect_str_repeat',   _str_repeat,   C.c_void_p, C.c_void_p, C.c_int64)
 
     # Range
     reg('vect_range', _range_fn, C.c_void_p, C.c_int64, C.c_int64, C.c_int64)

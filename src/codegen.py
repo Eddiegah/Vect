@@ -139,6 +139,15 @@ def _declare_runtime_functions(module: ir.Module) -> Dict[str, ir.Function]:
     decl('vect_str_concat',  PTR_T, PTR_T, PTR_T)
     decl('vect_int_to_str',  PTR_T, INT_T)
     decl('vect_float_to_str',PTR_T, FLOAT_T)
+    decl('vect_str_len',     INT_T,  PTR_T)
+    decl('vect_str_upper',   PTR_T,  PTR_T)
+    decl('vect_str_lower',   PTR_T,  PTR_T)
+    decl('vect_str_contains',BOOL_T, PTR_T, PTR_T)
+    decl('vect_str_starts',  BOOL_T, PTR_T, PTR_T)
+    decl('vect_str_ends',    BOOL_T, PTR_T, PTR_T)
+    decl('vect_str_replace', PTR_T,  PTR_T, PTR_T, PTR_T)
+    decl('vect_str_trim',    PTR_T,  PTR_T)
+    decl('vect_str_repeat',  PTR_T,  PTR_T, INT_T)
 
     # Range
     decl('vect_range',       PTR_T, INT_T, INT_T, INT_T)  # (start, stop, step)
@@ -993,6 +1002,33 @@ class CodeGen:
                 as_int = self.builder.zext(a, INT_T)
                 return self.builder.call(self.rt['vect_int_to_str'], [as_int])
             return a  # already a string/pointer — return as-is
+
+        # --- string operations (v4) ---
+        str_unary = {
+            'str_len':     ('vect_str_len',     INT_T),
+            'str_upper':   ('vect_str_upper',   PTR_T),
+            'str_lower':   ('vect_str_lower',   PTR_T),
+            'str_trim':    ('vect_str_trim',     PTR_T),
+        }
+        if name in str_unary:
+            rt_name, _ = str_unary[name]
+            return self.builder.call(self.rt[rt_name], [args[0]])
+
+        str_binary = {
+            'str_contains': ('vect_str_contains', BOOL_T),
+            'str_starts':   ('vect_str_starts',   BOOL_T),
+            'str_ends':     ('vect_str_ends',     BOOL_T),
+            'str_repeat':   ('vect_str_repeat',   PTR_T),
+        }
+        if name in str_binary:
+            rt_name, _ = str_binary[name]
+            a0 = args[0]
+            a1 = self._coerce(args[1], INT_T) if name == 'str_repeat' else args[1]
+            return self.builder.call(self.rt[rt_name], [a0, a1])
+
+        if name == 'str_replace':
+            return self.builder.call(self.rt['vect_str_replace'],
+                                     [args[0], args[1], args[2]])
 
         # --- transpose ---
         if name == 'transpose':

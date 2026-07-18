@@ -741,6 +741,15 @@ class TypeChecker:
         if name == 'solve':
             return VEC
 
+        # String operations (v4)
+        if name in ('str_upper', 'str_lower', 'str_trim', 'str_replace',
+                    'str_repeat', 'str_concat'):
+            return STRING
+        if name in ('str_len',):
+            return INT
+        if name in ('str_contains', 'str_starts', 'str_ends'):
+            return BOOL
+
         # Symbolic integration — first arg is a symbolic call, skip type-checking it
         if name == 'integral':
             if len(node.args) == 2:

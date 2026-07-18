@@ -579,3 +579,68 @@ print(vec_mean(v))
             run_source(src, 'test_import.vect')
         out = buf.getvalue().strip()
         assert '3' in out   # mean of 1-5 = 3.0
+
+
+# ---------------------------------------------------------------------------
+# v4 features — string ops, formatter
+# ---------------------------------------------------------------------------
+
+class TestStringOps:
+    def test_upper(self):
+        assert run('var s = "hello"\nprint(str_upper(s))') == 'HELLO'
+
+    def test_lower(self):
+        assert run('var s = "VECT"\nprint(str_lower(s))') == 'vect'
+
+    def test_len(self):
+        assert run('print(str_len("hello"))') == '5'
+
+    def test_contains_true(self):
+        assert run('print(str_contains("hello world", "world"))') == 'true'
+
+    def test_contains_false(self):
+        assert run('print(str_contains("hello", "xyz"))') == 'false'
+
+    def test_starts(self):
+        assert run('print(str_starts("Vect", "Ve"))') == 'true'
+
+    def test_ends(self):
+        assert run('print(str_ends("Vect", "ct"))') == 'true'
+
+    def test_replace(self):
+        assert run('print(str_replace("hello world", "world", "Vect"))') == 'hello Vect'
+
+    def test_trim(self):
+        assert run('print(str_trim("  hi  "))') == 'hi'
+
+    def test_repeat(self):
+        assert run('print(str_repeat("ab", 3))') == 'ababab'
+
+
+class TestFormatter:
+    def test_already_formatted(self):
+        from src.formatter import format_source
+        src = 'var x = 10\nprint(x)\n'
+        assert format_source(src) == src
+
+    def test_normalise_spacing(self):
+        from src.formatter import format_source
+        result = format_source('var x=10\n')
+        assert 'x = 10' in result
+
+    def test_comma_spacing(self):
+        from src.formatter import format_source
+        result = format_source('fn f(a,b) { return a }\n')
+        assert 'a, b' in result
+
+    def test_preserves_comments(self):
+        from src.formatter import format_source
+        src = '# my comment\nvar x = 1\n'
+        result = format_source(src)
+        assert '# my comment' in result
+
+    def test_preserves_strings(self):
+        from src.formatter import format_source
+        src = 'print("hello=world")\n'
+        result = format_source(src)
+        assert '"hello=world"' in result

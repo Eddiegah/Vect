@@ -72,6 +72,30 @@ def check(file):
 
 
 @cli.command()
+@click.argument('file', type=click.Path(exists=True))
+@click.option('--check', is_flag=True, help='Check formatting without changing the file')
+def fmt(file, check):
+    """Auto-format a .vect file (normalises spacing and indentation)."""
+    try:
+        from .formatter import format_file
+        changed = format_file(file, check_only=check)
+        if check:
+            if changed:
+                click.echo(f'  {file} — needs formatting (run vect fmt to fix)', err=True)
+                raise SystemExit(1)
+            else:
+                click.echo(f'  {file} — already formatted')
+        else:
+            if changed:
+                click.echo(f'  Formatted: {file}')
+            else:
+                click.echo(f'  {file} — already formatted')
+    except Exception as e:
+        _print_error(e)
+        raise SystemExit(1)
+
+
+@cli.command()
 def notebook():
     """Install the Vect Jupyter kernel and launch Jupyter."""
     try:
