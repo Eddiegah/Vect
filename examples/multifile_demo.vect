@@ -1,0 +1,36 @@
+# multifile_demo.vect — demonstrates multi-file imports
+# This single program uses functions from 3 different library files
+
+import "stdlib/mathlib.vect"
+import "stdlib/vectors.vect"
+import "stdlib/physics.vect"
+
+print("=== Math Library ===")
+print(clamp(15.0, 0.0, 10.0))      # 10.0  (clamped to max)
+print(lerp(0.0, 100.0, 0.25))      # 25.0  (25% of the way)
+print(sign(-7.5))                   # -1.0
+print(max_f(3.14, 2.71))           # 3.14
+
+print("=== Vector Library ===")
+var scores = [85.0, 92.0, 78.0, 96.0, 88.0]
+print(vec_sum(scores))              # 439.0
+print(vec_mean(scores))             # 87.8
+print(vec_max(scores))              # 96.0
+print(vec_min(scores))              # 78.0
+
+print("=== Physics Library ===")
+var h = free_fall_height(20.0, 2.0)
+print(h)                            # 20.4 metres at t=2s
+
+var v = free_fall_velocity(20.0, 2.0)
+print(v)                            # 0.4 m/s (nearly at peak)
+
+var ke = kinetic_energy(70.0, 10.0)
+print(ke)                           # 3500.0 Joules
+
+var pe = potential_energy(70.0, 5.0)
+print(pe)                           # 3430.0 Joules
+
+print("=== Functions from imports work together ===")
+var speed = clamp(free_fall_velocity(30.0, 3.0), 0.0, 100.0)
+print(speed)                        # 0.6 m/s (clamped, positive)

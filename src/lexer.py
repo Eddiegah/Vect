@@ -49,6 +49,8 @@ KEYWORDS = {
     'if', 'else', 'while', 'for', 'in', 'break', 'continue', 'return',
     # Declarations
     'var', 'fn', 'sym',
+    # Import
+    'import',
     # Types
     'int', 'float', 'bool', 'string', 'vec', 'mat',
     # Literals

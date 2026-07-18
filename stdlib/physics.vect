@@ -1,0 +1,27 @@
+# stdlib/physics.vect — Physics utility library for Vect
+# Import with: import "stdlib/physics.vect"
+
+# Gravitational acceleration (m/s^2)
+fn free_fall_height(v0: float, t: float) -> float {
+    return v0 * t - 0.5 * 9.8 * t * t
+}
+
+fn free_fall_velocity(v0: float, t: float) -> float {
+    return v0 - 9.8 * t
+}
+
+fn kinetic_energy(mass: float, velocity: float) -> float {
+    return 0.5 * mass * velocity * velocity
+}
+
+fn potential_energy(mass: float, height: float) -> float {
+    return mass * 9.8 * height
+}
+
+fn momentum(mass: float, velocity: float) -> float {
+    return mass * velocity
+}
+
+fn force(mass: float, accel: float) -> float {
+    return mass * accel
+}

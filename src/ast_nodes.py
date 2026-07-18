@@ -326,3 +326,17 @@ class Program(Node):
     body: List[Any]
     line: int = 0
     col: int = 0
+
+
+@dataclass
+class Import(Node):
+    """
+    Import declaration: import "path/to/file.vect"
+
+    At compile time, the pipeline reads the imported file, parses it,
+    and injects its fn/sym definitions into the current program.
+    Only fn and sym declarations are exported — variables stay local.
+    """
+    path: str       # the string literal path
+    line: int = 0
+    col: int = 0

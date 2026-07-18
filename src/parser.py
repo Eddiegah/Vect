@@ -23,6 +23,8 @@ downward (higher precedence) to build the tree correctly.
 from typing import List, Optional
 from .lexer import Token, tokenize, LexError
 from .ast_nodes import *
+# ensure Import is available
+from .ast_nodes import Import
 
 
 # ---------------------------------------------------------------------------
@@ -127,6 +129,10 @@ class Parser:
         if tok.type == 'VAR':
             return self.parse_var_decl()
 
+        # Import
+        if tok.type == 'IMPORT':
+            return self.parse_import()
+
         # Function definition
         if tok.type == 'FN':
             return self.parse_func_def()
@@ -188,6 +194,13 @@ class Parser:
         self._consume_stmt_end()
         return VarDecl(name=name_tok.value, type_annotation=type_ann,
                        value=value, line=tok.line, col=tok.col)
+
+    def parse_import(self) -> Import:
+        """Parse: import "path/to/file.vect" """
+        tok = self.expect('IMPORT')
+        path_tok = self.expect('STRING')
+        self._consume_stmt_end()
+        return Import(path=path_tok.value, line=tok.line, col=tok.col)
 
     def parse_func_def(self) -> FuncDef:
         tok = self.expect('FN')
@@ -470,15 +483,57 @@ class Parser:
     def parse_primary(self) -> Node:
         tok = self.current()
 
-        # Integer literal
+        # Integer literal (numeric) OR int() conversion function
         if tok.type == 'INT':
-            self.advance()
-            return IntLiteral(value=int(tok.value), line=tok.line, col=tok.col)
+            # If followed by ( — it's the int() conversion function
+            if self.peek(1).type == 'LPAREN':
+                self.advance()
+                self.expect('LPAREN')
+                args = []
+                if not self.check('RPAREN'):
+                    args.append(self.parse_expr())
+                    while self.match('COMMA'):
+                        args.append(self.parse_expr())
+                self.expect('RPAREN')
+                return FuncCall(name='int', args=args,
+                                line=tok.line, col=tok.col)
+            # Otherwise numeric integer literal
+            try:
+                int_val = int(tok.value)
+                self.advance()
+                return IntLiteral(value=int_val, line=tok.line, col=tok.col)
+            except ValueError:
+                raise ParseError(
+                    "Expected a number or 'int(expr)'.",
+                    tok.line, tok.col
+                )
 
-        # Float literal
+        # Float literal (numeric) OR float() conversion function
         if tok.type == 'FLOAT':
-            self.advance()
-            return FloatLiteral(value=float(tok.value), line=tok.line, col=tok.col)
+            # If followed by ( — it's the float() conversion function
+            if self.peek(1).type == 'LPAREN':
+                self.advance()
+                self.expect('LPAREN')
+                args = []
+                if not self.check('RPAREN'):
+                    args.append(self.parse_expr())
+                    while self.match('COMMA'):
+                        args.append(self.parse_expr())
+                self.expect('RPAREN')
+                return FuncCall(name='float', args=args,
+                                line=tok.line, col=tok.col)
+            # Otherwise it's a numeric float literal
+            try:
+                float_val = float(tok.value)
+                self.advance()
+                return FloatLiteral(value=float_val, line=tok.line, col=tok.col)
+            except ValueError:
+                # tok.value is the keyword 'float' without a following (
+                raise ParseError(
+                    "Expected a number or 'float(expr)' — "
+                    f"got 'float' without parentheses.",
+                    tok.line, tok.col
+                )
 
         # Bool literal
         if tok.type == 'BOOL':
@@ -528,6 +583,18 @@ class Parser:
         # print as expression (shouldn't normally happen but be defensive)
         if tok.type == 'PRINT':
             return self.parse_print_expr()
+
+        # STRING type keyword used as str() conversion function
+        if tok.type == 'STRING' and self.peek(1).type == 'LPAREN':
+            self.advance()
+            self.expect('LPAREN')
+            args = []
+            if not self.check('RPAREN'):
+                args.append(self.parse_expr())
+                while self.match('COMMA'):
+                    args.append(self.parse_expr())
+            self.expect('RPAREN')
+            return FuncCall(name='str', args=args, line=tok.line, col=tok.col)
 
         raise ParseError(
             f"Unexpected token {tok.type!r} ({tok.value!r}) — "

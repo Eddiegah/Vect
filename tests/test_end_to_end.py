@@ -492,3 +492,90 @@ print("done")
         out = run(src)
         assert 'done' in out            # program completed
         assert os.path.exists('vect_plot.png')  # PNG was saved
+
+
+# ---------------------------------------------------------------------------
+# Multi-file imports (v3 feature 1)
+# ---------------------------------------------------------------------------
+
+class TestImports:
+    def _run_file(self, name):
+        path = os.path.join(os.path.dirname(__file__), '..', name)
+        with open(path, encoding='utf-8') as f:
+            source = f.read()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            from src.pipeline import _parse_and_resolve, _get_runtime
+            from src.runtime import reset_registry
+            from src.type_checker import type_check
+            from src.codegen import CodeGen
+            reset_registry()
+            prog = _parse_and_resolve(source, path)
+            checker = type_check(prog)
+            cg = CodeGen(checker)
+            cg.compile(prog)
+            cg.execute(_get_runtime())
+        return buf.getvalue().strip().splitlines()
+
+    def test_mathlib_import(self):
+        src = '''import "stdlib/mathlib.vect"
+print(clamp(15.0, 0.0, 10.0))
+print(lerp(0.0, 100.0, 0.25))
+print(max_f(3.14, 2.71))
+'''
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            from src.pipeline import run_source
+            run_source(src, 'test_import.vect')
+        lines = buf.getvalue().strip().splitlines()
+        assert lines[0] == '10.0'
+        assert lines[1] == '25.0'
+        assert lines[2] == '3.14'
+
+    def test_vectors_import(self):
+        src = '''import "stdlib/vectors.vect"
+var v = [10.0, 20.0, 30.0, 40.0]
+print(vec_sum(v))
+print(vec_max(v))
+print(vec_min(v))
+'''
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            from src.pipeline import run_source
+            run_source(src, 'test_import.vect')
+        lines = buf.getvalue().strip().splitlines()
+        assert lines[0] == '100.0'
+        assert lines[1] == '40.0'
+        assert lines[2] == '10.0'
+
+    def test_physics_import(self):
+        src = '''import "stdlib/physics.vect"
+print(kinetic_energy(70.0, 10.0))
+print(momentum(5.0, 20.0))
+'''
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            from src.pipeline import run_source
+            run_source(src, 'test_import.vect')
+        lines = buf.getvalue().strip().splitlines()
+        assert lines[0] == '3500.0'
+        assert lines[1] == '100.0'
+
+    def test_multifile_demo(self):
+        result = self._run_file('examples/multifile_demo.vect')
+        assert '439.0' in result
+        assert '87.8' in result
+        assert '3500.0' in result
+
+    def test_int_float_conversion_in_stdlib(self):
+        # float(n) and int(x) used inside imported functions
+        src = '''import "stdlib/vectors.vect"
+var v = [1.0, 2.0, 3.0, 4.0, 5.0]
+print(vec_mean(v))
+'''
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            from src.pipeline import run_source
+            run_source(src, 'test_import.vect')
+        out = buf.getvalue().strip()
+        assert '3' in out   # mean of 1-5 = 3.0

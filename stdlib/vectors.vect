@@ -1,0 +1,37 @@
+# stdlib/vectors.vect — Vector utility library for Vect
+# Import with: import "stdlib/vectors.vect"
+
+fn vec_sum(v: vec) -> float {
+    var total = 0.0
+    for x in v { total = total + x }
+    return total
+}
+
+fn vec_mean(v: vec) -> float {
+    var n = len(v)
+    return vec_sum(v) / float(n)
+}
+
+fn vec_max(v: vec) -> float {
+    var m = v[0]
+    var i = 1
+    while i < len(v) {
+        if v[i] > m { m = v[i] }
+        i = i + 1
+    }
+    return m
+}
+
+fn vec_min(v: vec) -> float {
+    var m = v[0]
+    var i = 1
+    while i < len(v) {
+        if v[i] < m { m = v[i] }
+        i = i + 1
+    }
+    return m
+}
+
+fn vec_scale(v: vec, scalar: float) -> vec {
+    return v * scalar
+}
