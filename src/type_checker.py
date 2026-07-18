@@ -229,20 +229,32 @@ class TypeChecker:
     def _infer_return_type(self, body: list, env: Env) -> Optional[str]:
         """
         Scan a function body for return statements and infer the return type.
-        Returns the first concrete type found, or None (void) if no return.
+        Also processes VarDecl nodes to build up a local environment first,
+        so that `return local_var` correctly resolves.
         """
-        from .ast_nodes import Return
+        from .ast_nodes import Return, VarDecl, If, While, For
+        # First pass: collect local var types by scanning VarDecl
+        local_env = Env(parent=env)
+        for stmt in body:
+            if isinstance(stmt, VarDecl):
+                try:
+                    t = self._infer(stmt.value, local_env)
+                    local_env.define(stmt.name, t)
+                except Exception:
+                    local_env.define(stmt.name, FLOAT)  # safe default
+
+        # Second pass: find return statements
         for stmt in body:
             if isinstance(stmt, Return) and stmt.value is not None:
                 try:
-                    return self._infer(stmt.value, env)
+                    return self._infer(stmt.value, local_env)
                 except Exception:
                     pass
-            # Recurse into if/while/for bodies
+            # Recurse into blocks
             for attr in ('body', 'else_body'):
                 sub = getattr(stmt, attr, None)
                 if isinstance(sub, list):
-                    result = self._infer_return_type(sub, env)
+                    result = self._infer_return_type(sub, local_env)
                     if result:
                         return result
         return None
@@ -254,6 +266,8 @@ class TypeChecker:
     def _check_stmt(self, node: Node, env: Env) -> None:
         if isinstance(node, VarDecl):
             self._check_var_decl(node, env)
+        elif isinstance(node, TupleUnpack):
+            self._check_tuple_unpack(node, env)
         elif isinstance(node, Assign):
             self._check_assign(node, env)
         elif isinstance(node, IndexAssign):
@@ -310,6 +324,19 @@ class TypeChecker:
             val_type = ann
 
         env.define(node.name, val_type)
+
+    def _check_tuple_unpack(self, node, env: Env):
+        """var (a, b) = func()  — bind each name to its tuple element type."""
+        val_type = self._infer(node.value, env)
+        # val_type is like "(int, float)" or a function return type
+        if val_type.startswith('(') and val_type.endswith(')'):
+            inner = val_type[1:-1]
+            types = [t.strip() for t in inner.split(',')]
+        else:
+            # Unknown tuple — bind everything to float
+            types = [FLOAT] * len(node.names)
+        for name, t in zip(node.names, types):
+            env.define(name, t if t else FLOAT)
 
     def _check_assign(self, node: Assign, env: Env):
         existing = env.lookup(node.name)
@@ -560,6 +587,11 @@ class TypeChecker:
 
         if isinstance(node, IndexAccess):
             return self._infer_index(node, env)
+
+        if isinstance(node, TupleLiteral):
+            # A tuple — return a tuple type string like "(int, float)"
+            types = [self._infer(e, env) for e in node.elements]
+            return '(' + ', '.join(types) + ')'
 
         if isinstance(node, Derivative):
             return SYM

@@ -24,7 +24,7 @@ from typing import List, Optional
 from .lexer import Token, tokenize, LexError
 from .ast_nodes import *
 # ensure Import is available
-from .ast_nodes import Import
+from .ast_nodes import Import, TupleLiteral, TupleUnpack
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +183,20 @@ class Parser:
 
     def parse_var_decl(self) -> VarDecl:
         tok = self.expect('VAR')
+
+        # Tuple unpacking: var (a, b) = func()
+        if self.check('LPAREN'):
+            self.advance()
+            names = [self.expect('IDENT').value]
+            while self.match('COMMA'):
+                names.append(self.expect('IDENT').value)
+            self.expect('RPAREN')
+            self.expect('ASSIGN')
+            value = self.parse_expr()
+            self._consume_stmt_end()
+            return TupleUnpack(names=names, value=value,
+                               line=tok.line, col=tok.col)
+
         name_tok = self.expect('IDENT')
         type_ann = None
         if self.match('COLON'):
@@ -214,9 +228,23 @@ class Parser:
         self.expect('RPAREN')
         ret_type = None
         if self.match('ARROW'):
-            ret_type = self.expect(
-                'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
-            ).value
+            # Support tuple return types: -> (int, float)
+            if self.check('LPAREN'):
+                self.advance()
+                types = []
+                types.append(self.expect(
+                    'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
+                ).value)
+                while self.match('COMMA'):
+                    types.append(self.expect(
+                        'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
+                    ).value)
+                self.expect('RPAREN')
+                ret_type = '(' + ', '.join(types) + ')'
+            else:
+                ret_type = self.expect(
+                    'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
+                ).value
         self.skip_newlines()
         self.expect('LBRACE')
         body = self.parse_block()
@@ -561,12 +589,22 @@ class Parser:
             return FuncCall(name='transpose', args=[arg],
                             line=tok.line, col=tok.col)
 
-        # Grouped expression
+        # Grouped expression OR tuple literal
         if tok.type == 'LPAREN':
             self.advance()
-            expr = self.parse_expr()
+            first = self.parse_expr()
+            # If there's a comma after — it's a tuple
+            if self.check('COMMA'):
+                elements = [first]
+                while self.match('COMMA'):
+                    if self.check('RPAREN'):
+                        break
+                    elements.append(self.parse_expr())
+                self.expect('RPAREN')
+                return TupleLiteral(elements=elements,
+                                    line=tok.line, col=tok.col)
             self.expect('RPAREN')
-            return expr
+            return first
 
         # Vector or matrix literal: [...]
         if tok.type == 'LBRACKET':

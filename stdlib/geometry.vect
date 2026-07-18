@@ -1,0 +1,46 @@
+# stdlib/geometry.vect — 2D and 3D geometry for Vect
+# import "stdlib/geometry.vect"
+
+# Distance between two 2D points (as vecs)
+fn dist_2d(p1: vec, p2: vec) -> float {
+    var dx = p2[0] - p1[0]
+    var dy = p2[1] - p1[1]
+    return sqrt(dx*dx + dy*dy)
+}
+
+# Distance between two 3D points
+fn dist_3d(p1: vec, p2: vec) -> float {
+    return norm(p1 - p2)
+}
+
+# Area of a triangle given base and height
+fn triangle_area(base: float, height: float) -> float {
+    return 0.5 * base * height
+}
+
+# Area of a circle
+fn circle_area(r: float) -> float {
+    return 3.14159265 * r * r
+}
+
+# Circumference of a circle
+fn circle_circumference(r: float) -> float {
+    return 2.0 * 3.14159265 * r
+}
+
+# Volume of a sphere
+fn sphere_volume(r: float) -> float {
+    return (4.0 / 3.0) * 3.14159265 * r * r * r
+}
+
+# Midpoint of two vectors
+fn midpoint(p1: vec, p2: vec) -> vec {
+    return (p1 + p2) * 0.5
+}
+
+# Check if point is inside a circle
+fn point_in_circle(px: float, py: float, cx: float, cy: float, r: float) -> bool {
+    var dx = px - cx
+    var dy = py - cy
+    return sqrt(dx*dx + dy*dy) <= r
+}

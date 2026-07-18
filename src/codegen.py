@@ -315,6 +315,8 @@ class CodeGen:
     def _compile_stmt(self, node: Node):
         if isinstance(node, VarDecl):
             self._compile_var_decl(node)
+        elif isinstance(node, TupleUnpack):
+            self._compile_tuple_unpack(node)
         elif isinstance(node, Assign):
             self._compile_assign(node)
         elif isinstance(node, IndexAssign):
@@ -555,6 +557,39 @@ class CodeGen:
             val = self._coerce(val, ret_type)
             self.builder.ret(val)
 
+    def _compile_tuple_literal(self, node) -> ir.Value:
+        """
+        Compile (a, b, c) as a vec — stores all elements as float64.
+        Elements are coerced to float. Result is a PTR_T vec pointer.
+        """
+        elements = [self._compile_expr(e) for e in node.elements]
+        n = len(elements)
+        vec_ptr = self.builder.call(
+            self.rt['vect_vec_new'], [ir.Constant(INT_T, n)]
+        )
+        for i, elem in enumerate(elements):
+            val = self._coerce(elem, FLOAT_T)
+            self.builder.call(
+                self.rt['vect_vec_set'],
+                [vec_ptr, ir.Constant(INT_T, i), val]
+            )
+        return vec_ptr
+
+    def _compile_tuple_unpack(self, node) -> None:
+        """
+        Compile: var (a, b) = expr
+        Gets each element from the tuple vec and stores in separate allocas.
+        """
+        tup_val = self._compile_expr(node.value)
+        for i, name in enumerate(node.names):
+            elem = self.builder.call(
+                self.rt['vect_vec_get'],
+                [tup_val, ir.Constant(INT_T, i)]
+            )
+            alloca = self.builder.alloca(FLOAT_T, name=name)
+            self.builder.store(elem, alloca)
+            self._define_var(name, alloca)
+
     def _compile_func_def(self, node: FuncDef):
         """Compile a user-defined function to an LLVM function."""
         param_types, ret_type = self.checker.functions.get(
@@ -664,6 +699,9 @@ class CodeGen:
 
         if isinstance(node, StringLiteral):
             return self._string_const(node.value)
+
+        if isinstance(node, TupleLiteral):
+            return self._compile_tuple_literal(node)
 
         if isinstance(node, Identifier):
             return self._compile_identifier(node)

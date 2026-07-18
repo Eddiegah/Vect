@@ -742,6 +742,22 @@ def _str_trim(ptr: int) -> int:
 def _str_repeat(ptr: int, n: int) -> int:
     return _register(_str_deref(ptr) * n)
 
+
+# ---------------------------------------------------------------------------
+# Tuple support (v5)
+# ---------------------------------------------------------------------------
+
+def _tuple_new(*args) -> int:
+    """Store a tuple of values in the registry."""
+    return _register(tuple(args))
+
+def _tuple_get(ptr: int, i: int):
+    """Get element i from a tuple."""
+    t = _get(ptr)
+    if isinstance(t, tuple):
+        return t[i]
+    return 0
+
 # --- Range ---
 
 def _range_fn(start: int, stop: int, step: int) -> int:

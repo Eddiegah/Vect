@@ -1,0 +1,61 @@
+# stdlib/ml.vect — Machine learning primitives for Vect
+# import "stdlib/ml.vect"
+# Requires: import "stdlib/vectors.vect"
+
+# Cosine similarity between two vectors
+fn cosine_sim(a: vec, b: vec) -> float {
+    var dot_ab = a · b
+    var mag_a  = norm(a)
+    var mag_b  = norm(b)
+    var denom  = mag_a * mag_b
+    if denom < 0.0001 { return 0.0 }
+    return dot_ab / denom
+}
+
+# Mean squared error between predictions and targets
+fn mse(predictions: vec, targets: vec) -> float {
+    var n     = len(predictions)
+    var total = 0.0
+    var i     = 0
+    while i < n {
+        var diff = predictions[i] - targets[i]
+        total = total + diff * diff
+        i = i + 1
+    }
+    return total / float(n)
+}
+
+# Normalise a vector to [0, 1] range
+fn minmax_normalise(v: vec) -> vec {
+    var mn  = vec_min(v)
+    var mx  = vec_max(v)
+    var rng = mx - mn
+    if rng < 0.0001 { return v }
+    return (v - [mn, mn, mn]) * (1.0 / rng)
+}
+
+# Linear prediction: y = w · x + b
+fn linear_predict(weights: vec, inputs: vec, bias: float) -> float {
+    return (weights · inputs) + bias
+}
+
+# Euclidean distance between two vectors
+fn euclidean_dist(a: vec, b: vec) -> float {
+    var diff = a - b
+    return norm(diff)
+}
+
+# Weighted average
+fn weighted_avg(values: vec, weights: vec) -> float {
+    var total_w = 0.0
+    var total   = 0.0
+    var i = 0
+    var n = len(values)
+    while i < n {
+        total   = total   + values[i] * weights[i]
+        total_w = total_w + weights[i]
+        i = i + 1
+    }
+    if total_w < 0.0001 { return 0.0 }
+    return total / total_w
+}

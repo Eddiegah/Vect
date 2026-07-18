@@ -1,0 +1,47 @@
+# stdlib/calculus.vect — Numerical calculus utilities for Vect
+# import "stdlib/calculus.vect"
+
+# Numerical derivative at a point (finite differences)
+fn num_diff(f_plus: float, f_minus: float, h: float) -> float {
+    return (f_plus - f_minus) / (2.0 * h)
+}
+
+# Gradient descent step: x_new = x - lr * gradient
+fn gradient_step(x: float, gradient: float, lr: float) -> float {
+    return x - lr * gradient
+}
+
+# Trapezoidal rule (numerical integration of two points)
+fn trapezoid(f_a: float, f_b: float, a: float, b: float) -> float {
+    return 0.5 * (f_a + f_b) * (b - a)
+}
+
+# Newton's method: one step
+fn newton_step(x: float, fx: float, dfx: float) -> float {
+    if dfx < 0.0001 and dfx > -0.0001 { return x }
+    return x - fx / dfx
+}
+
+# Sigmoid function (common in ML)
+fn sigmoid(x: float) -> float {
+    return 1.0 / (1.0 + exp_approx(-x))
+}
+
+# ReLU activation
+fn relu(x: float) -> float {
+    if x > 0.0 { return x }
+    return 0.0
+}
+
+# Approximate exp (Taylor series, good for small x)
+fn exp_approx(x: float) -> float {
+    var result = 1.0
+    var term   = 1.0
+    var i      = 1
+    while i <= 10 {
+        term = term * x / float(i)
+        result = result + term
+        i = i + 1
+    }
+    return result
+}

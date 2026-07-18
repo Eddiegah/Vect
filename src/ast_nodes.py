@@ -330,13 +330,35 @@ class Program(Node):
 
 @dataclass
 class Import(Node):
-    """
-    Import declaration: import "path/to/file.vect"
+    """import "path/to/file.vect" """
+    path: str
+    line: int = 0
+    col: int = 0
 
-    At compile time, the pipeline reads the imported file, parses it,
-    and injects its fn/sym definitions into the current program.
-    Only fn and sym declarations are exported — variables stay local.
+
+# ---------------------------------------------------------------------------
+# Multiple return values (v5)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class TupleLiteral(Node):
     """
-    path: str       # the string literal path
+    A tuple literal: (expr1, expr2, ...)
+    Used as return values and in destructuring assignments.
+    """
+    elements: List[Any]
+    line: int = 0
+    col: int = 0
+
+
+@dataclass
+class TupleUnpack(Node):
+    """
+    Destructuring assignment: var (a, b) = func()
+    names: list of variable names to bind
+    value: the expression producing the tuple
+    """
+    names: List[str]
+    value: Any
     line: int = 0
     col: int = 0
