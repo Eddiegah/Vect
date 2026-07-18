@@ -18,7 +18,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9%20–%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![LLVM](https://img.shields.io/badge/LLVM-Native%20Codegen-262D3A?style=for-the-badge&logo=llvm&logoColor=white)](https://llvm.org)
 [![License](https://img.shields.io/badge/License-MIT-FF6F00?style=for-the-badge)](./LICENSE)
-[![Version](https://img.shields.io/badge/Version-3.0-7C4DFF?style=for-the-badge)](https://github.com/Eddiegah/Vect)
+[![Version](https://img.shields.io/badge/Version-5.0-7C4DFF?style=for-the-badge)](https://github.com/Eddiegah/Vect)
 
 <br/>
 
@@ -504,8 +504,11 @@ Vect/
 | Auto-formatter (`vect fmt`) | v4 | ✅ |
 | Extended stdlib (statistics, linalg, strings) | v4 | ✅ |
 | 174 tests | v4 | ✅ |
-| Full static C runtime | v5 | 🔲 |
-| Package manager | v5 | 🔲 |
+| Typed vectors `vec<int>`, `vec<float>` | v5 | ✅ |
+| Multiple return values / tuple syntax | v5 | ✅ |
+| 9 stdlib files (math, vectors, physics, statistics, linalg, strings, geometry, ml, calculus) | v5 | ✅ |
+| Better AOT runtime (standalone .exe) | v6 | 🔲 |
+| Package manager | v6 | 🔲 |
 
 ---
 

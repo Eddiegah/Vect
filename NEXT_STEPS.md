@@ -1,13 +1,28 @@
-# Vect — Next Steps (Resume in September)
+# Vect — Next Steps (Resume Later)
 
-## Current state when you left (July 2025)
+## Current state (July 2025)
 
-- **Version:** v4.0
+- **Version:** v5.0
 - **Tests:** 174 passing
-- **All features working:** vectors, matrices, d/dx, integral, plot, f-strings,
-  multi-file imports, type inference, Jupyter kernel, AOT .exe,
-  string operations, formatter, VS Code autocomplete
-- **Repo:** github.com/Eddiegah/Vect
+- **GitHub:** github.com/Eddiegah/Vect
+
+### Everything that's been built
+
+| Feature | Status |
+|---------|--------|
+| Core language (vars, functions, control flow) | ✅ |
+| Vectors, matrices, dot product, d/dx, integral | ✅ |
+| f-strings, plot(), AOT .exe, string ops | ✅ |
+| Multi-file imports + 9 stdlib files | ✅ |
+| Type inference (no annotations needed) | ✅ |
+| Typed vectors `vec<int>`, `vec<float>` | ✅ |
+| Multiple return values / tuple syntax | ✅ |
+| Error recovery (all errors at once) | ✅ |
+| Jupyter kernel | ✅ |
+| VS Code autocomplete + hover + diagnostics | ✅ |
+| Auto-formatter (`vect fmt`) | ✅ |
+| REPL, CLI (run/build/check/ir/fmt/notebook) | ✅ |
+| 9 stdlib files (math, vectors, physics, stats, linalg, strings, geometry, ml, calculus) | ✅ |
 
 ---
 
@@ -15,81 +30,36 @@
 
 ```powershell
 cd C:\Projects\Vect
+py -3.11 -m venv venv          # if venv is gone
 venv\Scripts\activate
-venv\Scripts\pytest tests\ -q          # confirm 174 tests pass
-venv\Scripts\vect run examples\demo.vect   # confirm it runs
-```
-
-If venv is gone (3+ months later), rebuild it:
-```powershell
-py -3.11 -m venv venv
-venv\Scripts\pip install -r requirements.txt
-venv\Scripts\pip install -e .
+pip install -r requirements.txt
+pip install -e .
+venv\Scripts\pytest tests\ -q   # confirm 174 tests pass
+venv\Scripts\vect run examples\demo.vect
 ```
 
 ---
 
-## What to build in September (priority order)
+## What's genuinely left (v6)
 
-### Priority 1 — Most impactful
-**Multiple return values**
-```vect
-fn min_max(v: vec) -> (float, float) {
-    return (vec_min(v), vec_max(v))
-}
-var (lo, hi) = min_max(scores)
-```
-Files to touch: `ast_nodes.py`, `parser.py`, `type_checker.py`, `codegen.py`
+| Feature | What it means | Effort |
+|---------|--------------|--------|
+| **Better AOT runtime** | `.exe` that needs zero Python on PATH. Use Cython/Nuitka to compile the Python runtime to a static lib. | High |
+| **Package manager** | `vect pkg install physics` — GitHub-based registry. Separate product. | Very high |
+| **More example programs** | Physics simulations, ML demos, data visualisation | Low |
+| **Performance profiling** | Measure JIT vs Python overhead, optimise hot paths | Medium |
 
 ---
 
-**More stdlib files**
-- `stdlib/calculus.vect` — Newton's method, numerical gradient
-- `stdlib/ml.vect` — dot product similarity, softmax, sigmoid
-- `stdlib/geometry.vect` — distance, area, rotation
-These are just `.vect` files — no compiler changes needed.
-
----
-
-### Priority 2 — Nice to have
-**Typed vectors `vec<int>`**
-Currently all vectors are float64. `vec<int>` would allow integer arrays.
-Requires type system changes in `type_checker.py` and `runtime.py`.
-
-**Better AOT runtime**
-Currently `vect build` .exe needs Python on PATH.
-Goal: produce a truly standalone binary.
-Approach: compile the Python runtime to a static library using Cython or Nuitka.
-
----
-
-### Priority 3 — When there's an ecosystem
-**Package manager**
-`vect pkg install physics`
-Requires: a GitHub-based registry, a manifest format, and a resolver.
-This is a separate product, not a feature. Only worth doing if people
-are actually writing and sharing Vect libraries.
-
----
-
-## Files you'll want to read first
+## Files to read first when resuming
 
 | File | Why |
 |------|-----|
-| `src/codegen.py` | The most complex file — LLVM IR generation |
+| `src/codegen.py` | LLVM IR generation — most complex file |
 | `src/type_checker.py` | Type inference and error collection |
-| `src/pipeline.py` | Import resolution — understand this before touching multi-file stuff |
-| `src/runtime.py` | Where vec/mat/sym/plot/string operations live |
-| `tests/test_end_to_end.py` | Best place to understand what the language can do |
-
----
-
-## People to share with before September
-
-- Push the `eddie.vect` screenshot to socials
-- Share `docs/vect-wow-factor.html` as PDF with friends
-- Point them to `docs/vect-starter-guide.html` if they want to try it
-- The LinkedIn description is already written — post it if you haven't
+| `src/pipeline.py` | Import resolution |
+| `src/runtime.py` | Vec/mat/sym/plot/string operations |
+| `tests/test_end_to_end.py` | Best overview of what the language can do |
 
 ---
 
