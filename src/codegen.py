@@ -54,8 +54,9 @@ def vect_type_to_llvm(t: str) -> ir.Type:
     if t == FLOAT:  return FLOAT_T
     if t == BOOL:   return BOOL_T
     if t in (STRING, VEC, MAT, SYM): return PTR_T
+    if t.startswith('vec<') or t.startswith('mat<'): return PTR_T  # typed vectors
     if t == VOID:   return VOID_T
-    if t == 'unknown': return FLOAT_T   # inferred functions default to float
+    if t == 'unknown': return FLOAT_T
     return PTR_T   # fallback
 
 
@@ -1208,16 +1209,15 @@ class CodeGen:
             self.builder.call(rt['vect_print_int'], [val])
 
     def _vect_type_of(self, node: Node) -> str:
-        """
-        Lightweight AST-level type inference used only by the code generator
-        to determine how to dispatch print() and similar calls.
-        Mirrors the type checker's logic but doesn't enforce rules.
-        """
+        """Lightweight type inference for print dispatch etc."""
         if isinstance(node, IntLiteral):     return INT
         if isinstance(node, FloatLiteral):   return FLOAT
         if isinstance(node, BoolLiteral):    return BOOL
         if isinstance(node, StringLiteral):  return STRING
-        if isinstance(node, VectorLiteral):  return VEC
+        if isinstance(node, VectorLiteral):
+            if node.elements and isinstance(node.elements[0], IntLiteral):
+                return 'vec<int>'
+            return VEC
         if isinstance(node, MatrixLiteral):  return MAT
         if isinstance(node, Derivative):     return SYM
         if isinstance(node, SymbolicEval):   return FLOAT

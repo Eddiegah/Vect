@@ -200,9 +200,7 @@ class Parser:
         name_tok = self.expect('IDENT')
         type_ann = None
         if self.match('COLON'):
-            type_ann = self.expect(
-                'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
-            ).value
+            type_ann = self._parse_type_annotation()
         self.expect('ASSIGN')
         value = self.parse_expr()
         self._consume_stmt_end()
@@ -232,19 +230,13 @@ class Parser:
             if self.check('LPAREN'):
                 self.advance()
                 types = []
-                types.append(self.expect(
-                    'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
-                ).value)
+                types.append(self._parse_type_annotation())
                 while self.match('COMMA'):
-                    types.append(self.expect(
-                        'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
-                    ).value)
+                    types.append(self._parse_type_annotation())
                 self.expect('RPAREN')
                 ret_type = '(' + ', '.join(types) + ')'
             else:
-                ret_type = self.expect(
-                    'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
-                ).value
+                ret_type = self._parse_type_annotation()
         self.skip_newlines()
         self.expect('LBRACE')
         body = self.parse_block()
@@ -258,11 +250,28 @@ class Parser:
         tok = self.expect('IDENT')
         type_ann = None
         if self.match('COLON'):
-            type_ann = self.expect(
-                'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
-            ).value
+            type_ann = self._parse_type_annotation()
         return Param(name=tok.value, type_annotation=type_ann,
                      line=tok.line, col=tok.col)
+
+    def _parse_type_annotation(self) -> str:
+        """
+        Parse a type annotation: int, float, vec, mat, vec<int>, mat<float>, etc.
+        Returns a string like 'int', 'vec', 'vec<int>', 'mat<float>'.
+        """
+        base_tok = self.expect(
+            'INT', 'FLOAT', 'BOOL', 'STRING', 'VEC', 'MAT', 'IDENT'
+        )
+        base = base_tok.value   # 'int', 'float', 'vec', 'mat', etc.
+
+        # Check for vec<type> or mat<type>
+        if base in ('vec', 'mat') and self.check('LT'):
+            self.advance()   # consume <
+            inner_tok = self.expect('INT', 'FLOAT', 'BOOL', 'STRING', 'IDENT')
+            self.expect('GT')
+            return f'{base}<{inner_tok.value}>'
+
+        return base
 
     def parse_symbolic_func(self) -> SymbolicFunc:
         """Parse: sym f(x, y) = expr"""

@@ -58,6 +58,22 @@ SYM    = 'sym'
 NUMERIC = {INT, FLOAT}
 
 
+def _vec_inner(t: str) -> str:
+    """Return the element type of a typed vector. vec<int> → int, vec → float."""
+    if t.startswith('vec<') and t.endswith('>'):
+        return t[4:-1]
+    return FLOAT
+
+
+def _is_vec(t: str) -> bool:
+    """True for vec, vec<int>, vec<float>, vec<bool>."""
+    return t == VEC or (t.startswith('vec<') and t.endswith('>'))
+
+
+def _is_mat(t: str) -> bool:
+    return t == MAT or (t.startswith('mat<') and t.endswith('>'))
+
+
 def is_numeric(t: str) -> bool:
     return t in NUMERIC
 
@@ -301,21 +317,27 @@ class TypeChecker:
         ann = node.type_annotation
 
         if ann:
-            # Normalize annotation
-            ann = ann.lower() if ann not in (VEC, MAT, SYM) else ann
-            # Allow int literal assigned to float variable (widening)
-            if ann == FLOAT and val_type == INT:
+            # vec<X> is compatible with any vec type
+            if _is_vec(ann) and _is_vec(val_type):
+                env.define(node.name, ann)
+                return
+            if _is_mat(ann) and _is_mat(val_type):
+                env.define(node.name, ann)
+                return
+            # Normalize plain type annotations
+            ann_norm = ann.lower() if ann not in (VEC, MAT, SYM) else ann
+            if ann_norm == FLOAT and val_type == INT:
                 val_type = FLOAT
-            elif ann == INT and val_type == FLOAT:
+            elif ann_norm == INT and val_type == FLOAT:
                 raise TypeError(
                     f"Variable '{node.name}' is declared as 'int' but "
-                    f"the value is a float. Use 'int(...)' to convert explicitly, "
+                    f"the value is a float. Use 'int(...)' to convert, "
                     f"or declare it as 'float'.",
                     node.line, node.col
                 )
-            elif ann not in (val_type, SYM) and not (ann == VEC and val_type == VEC) \
-                    and not (ann == MAT and val_type == MAT):
-                if val_type not in (VEC, MAT, SYM):  # be lenient with container types
+            elif ann_norm not in (val_type, SYM) and not _is_vec(ann_norm) \
+                    and not _is_mat(ann_norm):
+                if val_type not in (VEC, MAT, SYM):
                     raise TypeError(
                         f"Variable '{node.name}' declared as '{ann}' "
                         f"but assigned a '{val_type}' value.",
@@ -437,63 +459,26 @@ class TypeChecker:
 
     def _check_for(self, node: For, env: Env):
         iter_type = self._infer(node.iterable, env)
-        if iter_type not in (VEC, MAT, STRING):
+        if not (_is_vec(iter_type) or _is_mat(iter_type) or iter_type == STRING):
             raise TypeError(
                 f"'for' loop can only iterate over vec, mat, or string, "
                 f"but got '{iter_type}'.",
                 node.iterable.line, node.iterable.col
             )
         body_env = Env(parent=env)
-        elem_type = FLOAT if iter_type in (VEC, MAT) else STRING
+        # Element type depends on what we're iterating
+        if iter_type == STRING:
+            elem_type = STRING
+        elif _is_vec(iter_type):
+            elem_type = _vec_inner(iter_type)
+        else:
+            elem_type = FLOAT
         body_env.define(node.var, elem_type)
         for stmt in node.body:
             try:
                 self._check_stmt(stmt, body_env)
             except TypeError:
                 raise
-
-    def _check_if(self, node: If, env: Env):
-        cond_type = self._infer(node.condition, env)
-        if cond_type != BOOL and cond_type not in NUMERIC:
-            raise TypeError(
-                f"'if' condition must be a bool or numeric expression, "
-                f"but got '{cond_type}'.",
-                node.condition.line, node.condition.col
-            )
-        body_env = Env(parent=env)
-        for stmt in node.body:
-            self._check_stmt(stmt, body_env)
-        if node.else_body:
-            else_env = Env(parent=env)
-            for stmt in node.else_body:
-                self._check_stmt(stmt, else_env)
-
-    def _check_while(self, node: While, env: Env):
-        cond_type = self._infer(node.condition, env)
-        if cond_type != BOOL and cond_type not in NUMERIC:
-            raise TypeError(
-                f"'while' condition must be a bool or numeric expression, "
-                f"but got '{cond_type}'.",
-                node.condition.line, node.condition.col
-            )
-        body_env = Env(parent=env)
-        for stmt in node.body:
-            self._check_stmt(stmt, body_env)
-
-    def _check_for(self, node: For, env: Env):
-        iter_type = self._infer(node.iterable, env)
-        if iter_type not in (VEC, MAT, STRING):
-            raise TypeError(
-                f"'for' loop can only iterate over vec, mat, or string, "
-                f"but got '{iter_type}'.",
-                node.iterable.line, node.iterable.col
-            )
-        body_env = Env(parent=env)
-        # The loop variable type depends on what we're iterating over
-        elem_type = FLOAT if iter_type in (VEC, MAT) else STRING
-        body_env.define(node.var, elem_type)
-        for stmt in node.body:
-            self._check_stmt(stmt, body_env)
 
     def _check_return(self, node: Return, env: Env):
         if not self._return_type_stack:
@@ -558,18 +543,25 @@ class TypeChecker:
         if isinstance(node, VectorLiteral):
             for elem in node.elements:
                 et = self._infer(elem, env)
-                if et not in NUMERIC and et != VEC:
+                if et not in NUMERIC and not _is_vec(et):
                     raise TypeError(
                         f"Vector elements must be numeric (int or float), "
                         f"but found a '{et}' element.",
                         elem.line, elem.col
                     )
+            # Infer the element type from the first element
+            if node.elements:
+                elem_t = self._infer(node.elements[0], env)
+                if elem_t == INT:
+                    return 'vec<int>'
+                if elem_t == BOOL:
+                    return 'vec<bool>'
             return VEC
 
         if isinstance(node, MatrixLiteral):
             for row in node.rows:
                 rt = self._infer(row, env)
-                if rt != VEC:
+                if not _is_vec(rt):
                     raise TypeError(
                         f"Matrix rows must be vectors, but found '{rt}'.",
                         row.line, row.col
@@ -616,23 +608,26 @@ class TypeChecker:
 
         # --- Vector/matrix ops ---
         if op in ('+', '-', '*'):
-            if left_t == VEC and right_t == VEC:
+            if _is_vec(left_t) and _is_vec(right_t):
+                # Preserve the more specific type
+                if left_t == right_t:
+                    return left_t
                 return VEC
-            if left_t == MAT and right_t == MAT:
+            if _is_mat(left_t) and _is_mat(right_t):
                 return MAT
-            if left_t == VEC and right_t in NUMERIC:
-                return VEC
-            if left_t in NUMERIC and right_t == VEC:
-                return VEC
-            if left_t == MAT and right_t in NUMERIC:
+            if _is_vec(left_t) and right_t in NUMERIC:
+                return left_t
+            if left_t in NUMERIC and _is_vec(right_t):
+                return right_t
+            if _is_mat(left_t) and right_t in NUMERIC:
                 return MAT
-            if left_t in NUMERIC and right_t == MAT:
+            if left_t in NUMERIC and _is_mat(right_t):
                 return MAT
 
-        if op == '@':   # matrix multiply
-            if left_t == MAT and right_t == MAT:
+        if op == '@':
+            if _is_mat(left_t) and _is_mat(right_t):
                 return MAT
-            if left_t == MAT and right_t == VEC:
+            if _is_mat(left_t) and _is_vec(right_t):
                 return VEC
             raise TypeError(
                 f"'@' (matrix multiply) requires matrix operands, "
@@ -640,8 +635,8 @@ class TypeChecker:
                 node.line, node.col
             )
 
-        if op == '·':   # dot product
-            if left_t == VEC and right_t == VEC:
+        if op == '·':
+            if _is_vec(left_t) and _is_vec(right_t):
                 return FLOAT
             raise TypeError(
                 f"'·' (dot product) requires two vectors, "
@@ -868,9 +863,9 @@ class TypeChecker:
                 f"Index must be an int, but got '{idx_t}'.",
                 node.index.line, node.index.col
             )
-        if obj_t == VEC:
-            return FLOAT
-        if obj_t == MAT:
+        if _is_vec(obj_t):
+            return _vec_inner(obj_t)  # vec<int>[i] → int, vec[i] → float
+        if _is_mat(obj_t):
             return VEC
         if obj_t == STRING:
             return STRING
