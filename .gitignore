@@ -20,3 +20,4 @@ dist/
 *.exe
 vect_plot.png
 vect_plot*.png
+*.pdf

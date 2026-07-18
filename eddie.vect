@@ -1,0 +1,44 @@
+# eddie.vect — Written in Vect, a language I built from scratch
+
+print("╔══════════════════════════════════════════════════╗")
+print("║                                                  ║")
+print("║   Hi guys, my name is Edmund Eric Gah           ║")
+print("║   I build crazy stuff, lol                      ║")
+print("║                                                  ║")
+print("║   I want you to follow my journey               ║")
+print("║   as I build VECT.                               ║")
+print("║                                                  ║")
+print("║   Thank you for your support ❤️                  ║")
+print("║                                                  ║")
+print("╚══════════════════════════════════════════════════╝")
+print("")
+
+# And here's proof Vect is real...
+
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("  Here is what Vect can do:")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("")
+
+# Native vectors — no library needed
+var support = [10.0, 10.0, 10.0, 10.0, 10.0]
+print(f"  Your support level: {support}")
+print(f"  Total support:      {norm(support)}")
+print("")
+
+# Symbolic calculus built right in
+sym journey(t) = 3.0*t**2 + 2.0*t + 1.0
+var momentum = d/dt(journey(t))
+print(f"  My journey formula:  {momentum}")
+print(f"  Momentum at day 10:  {eval(momentum, t=10.0)}")
+print("")
+
+# Matrix of goals
+var goals = [[1.0, 0.0], [0.0, 1.0]] @ [[100.0], [200.0]]
+print(f"  Goals matrix result: {goals}")
+print("")
+
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("  github.com/Eddiegah/Vect")
+print("  159 tests passing | LLVM backend | Built from scratch")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
