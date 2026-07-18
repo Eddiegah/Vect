@@ -18,7 +18,7 @@ Type system (v1):
 Promotion rule: int op float → float  (e.g. 1 + 2.0 is legal, yields float)
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from .ast_nodes import *
 
 
@@ -138,15 +138,12 @@ BUILTINS: Dict[str, Tuple] = {
 class TypeChecker:
     def __init__(self):
         self.global_env = Env()
-        # Register built-in functions
         for name, (params, ret) in BUILTINS.items():
             self.global_env.define(name, f'fn:{ret}')
-        # Map of user-defined function signatures: name → (param_types, return_type)
         self.functions: Dict[str, Tuple[List[str], str]] = {}
-        # Track expected return type when inside a function
         self._return_type_stack: List[str] = []
-        # Symbolic function names (for special handling in codegen)
         self.symbolic_funcs: set = set()
+        self._func_nodes: Dict[str, Any] = {}   # name → FuncDef AST node
 
     def check(self, program: Program) -> None:
         """
@@ -180,14 +177,74 @@ class TypeChecker:
             raise MultiTypeError(errors)
 
     def _register_func(self, node: FuncDef):
-        """Record a function's signature in the environment."""
+        """
+        Record a function's signature in the environment.
+
+        If parameters have annotations, use them directly.
+        If a parameter has NO annotation, mark it as 'unknown' — it will
+        be resolved when we see the first call to this function.
+        """
         param_types = []
         for p in node.params:
-            t = p.type_annotation or FLOAT  # default to float if unannotated
+            t = p.type_annotation if p.type_annotation else 'unknown'
             param_types.append(t)
-        ret = node.return_type or VOID
+        ret = node.return_type if node.return_type else 'unknown'
         self.functions[node.name] = (param_types, ret)
         self.global_env.define(node.name, f'fn:{ret}')
+        # Store the AST node for re-checking after inference
+        self._func_nodes[node.name] = node
+
+    def _resolve_func_signature(self, name: str, arg_types: List[str]):
+        """
+        When a function with 'unknown' param types is first called,
+        substitute the actual argument types and re-record the signature.
+        Also infer the return type by type-checking the body with
+        the inferred parameter types.
+        """
+        if name not in self._func_nodes:
+            return
+        node = self._func_nodes[name]
+        param_types, ret = self.functions[name]
+
+        # Replace 'unknown' params with inferred types from call site
+        new_param_types = []
+        for i, (pt, at) in enumerate(zip(param_types, arg_types)):
+            if pt == 'unknown':
+                new_param_types.append(at)
+            else:
+                new_param_types.append(pt)
+
+        # Infer return type by type-checking the body with resolved params
+        if ret == 'unknown':
+            func_env = Env(parent=self.global_env)
+            for p, t in zip(node.params, new_param_types):
+                func_env.define(p.name, t)
+            inferred_ret = self._infer_return_type(node.body, func_env)
+            ret = inferred_ret if inferred_ret else VOID
+
+        self.functions[name] = (new_param_types, ret)
+        self.global_env.define(name, f'fn:{ret}')
+
+    def _infer_return_type(self, body: list, env: Env) -> Optional[str]:
+        """
+        Scan a function body for return statements and infer the return type.
+        Returns the first concrete type found, or None (void) if no return.
+        """
+        from .ast_nodes import Return
+        for stmt in body:
+            if isinstance(stmt, Return) and stmt.value is not None:
+                try:
+                    return self._infer(stmt.value, env)
+                except Exception:
+                    pass
+            # Recurse into if/while/for bodies
+            for attr in ('body', 'else_body'):
+                sub = getattr(stmt, attr, None)
+                if isinstance(sub, list):
+                    result = self._infer_return_type(sub, env)
+                    if result:
+                        return result
+        return None
 
     # ------------------------------------------------------------------
     # Statement checking
@@ -289,10 +346,18 @@ class TypeChecker:
         param_types, ret_type = self.functions.get(node.name, ([], VOID))
         func_env = Env(parent=env)
         for p, t in zip(node.params, param_types):
-            func_env.define(p.name, t)
-        self._return_type_stack.append(ret_type)
+            # Use annotation if available, else use inferred or default to float
+            actual_t = p.type_annotation if p.type_annotation else (
+                t if t != 'unknown' else FLOAT
+            )
+            func_env.define(p.name, actual_t)
+        expected_ret = ret_type if ret_type != 'unknown' else VOID
+        self._return_type_stack.append(expected_ret)
         for stmt in node.body:
-            self._check_stmt(stmt, func_env)
+            try:
+                self._check_stmt(stmt, func_env)
+            except TypeError:
+                pass  # body errors collected at top level
         self._return_type_stack.pop()
 
     def _check_if(self, node: If, env: Env):
@@ -634,6 +699,27 @@ class TypeChecker:
         # User-defined function
         if name in self.functions:
             param_types, ret_type = self.functions[name]
+
+            # --- Type inference: resolve unknown params from call site ---
+            # If ANY param is unknown, infer for THIS call (polymorphic)
+            if 'unknown' in param_types or ret_type == 'unknown':
+                actual_types = []
+                for arg in node.args:
+                    try:
+                        actual_types.append(self._infer(arg, env))
+                    except Exception:
+                        actual_types.append(FLOAT)
+                if len(actual_types) == len(param_types):
+                    # Infer return type for this specific call's types
+                    node_ast = self._func_nodes.get(name)
+                    if node_ast:
+                        func_env = Env(parent=self.global_env)
+                        for p, t in zip(node_ast.params, actual_types):
+                            func_env.define(p.name, t)
+                        inferred_ret = self._infer_return_type(node_ast.body, func_env)
+                        return inferred_ret if inferred_ret else VOID
+                return ret_type if ret_type != 'unknown' else FLOAT
+
             if len(node.args) != len(param_types):
                 raise TypeError(
                     f"Function '{name}' expects {len(param_types)} argument(s) "
@@ -643,17 +729,15 @@ class TypeChecker:
             for i, (arg, expected_t) in enumerate(zip(node.args, param_types)):
                 actual_t = self._infer(arg, env)
                 if actual_t != expected_t:
-                    # Allow int→float promotion
-                    if expected_t == FLOAT and actual_t == INT:
-                        continue
-                    if expected_t in (VEC, MAT, SYM):
-                        continue  # be lenient with container types
+                    if expected_t == FLOAT and actual_t == INT: continue
+                    if expected_t in (VEC, MAT, SYM): continue
+                    if expected_t == 'unknown': continue
                     raise TypeError(
                         f"Argument {i+1} of '{name}' should be '{expected_t}' "
                         f"but got '{actual_t}'.",
                         arg.line, arg.col
                     )
-            return ret_type
+            return ret_type if ret_type != 'unknown' else FLOAT
 
         # Symbolic function (calling sym f(x) as f(x) in a derivative context)
         if name in self.symbolic_funcs:

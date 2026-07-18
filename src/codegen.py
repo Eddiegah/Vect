@@ -55,6 +55,7 @@ def vect_type_to_llvm(t: str) -> ir.Type:
     if t == BOOL:   return BOOL_T
     if t in (STRING, VEC, MAT, SYM): return PTR_T
     if t == VOID:   return VOID_T
+    if t == 'unknown': return FLOAT_T   # inferred functions default to float
     return PTR_T   # fallback
 
 
@@ -266,15 +267,19 @@ class CodeGen:
     def compile(self, program: Program):
         """
         Compile the entire program.
-        1. First pass: compile all user-defined functions (so they can call each other).
-        2. Second pass: compile top-level statements into main().
+        First pass: compile only ANNOTATED user functions.
+        Inferred (annotation-free) functions are compiled on-demand
+        when first called with concrete argument types.
+        Second pass: compile top-level statements into main().
         """
-        # First pass: declare and compile all functions
+        # First pass: compile only fully-annotated functions
         for node in program.body:
             if isinstance(node, FuncDef):
-                self._compile_func_def(node)
+                param_types, ret = self.checker.functions.get(node.name, ([], 'void'))
+                has_unknown = 'unknown' in param_types or ret == 'unknown'
+                if not has_unknown:
+                    self._compile_func_def(node)
             elif isinstance(node, SymbolicFunc):
-                # Store symbolic functions for the runtime to handle.
                 self.sym_fns[node.name] = node
 
         # Build main() — the entry point
@@ -582,6 +587,59 @@ class CodeGen:
     # ------------------------------------------------------------------
     # Expression compilation
     # ------------------------------------------------------------------
+
+    def _compile_inferred_func(self, node: FuncDef, specialized_name: str,
+                                param_llvm_types: list):
+        """
+        Compile a type-inferred function with a specific set of concrete
+        LLVM types. This is monomorphization — one compiled version per
+        distinct argument type combination.
+        """
+        # Infer the return type by type-checking the body
+        from .type_checker import Env as TCEnv
+        func_env = TCEnv(parent=self.checker.global_env)
+        vect_param_types = []
+        for p, llvm_t in zip(node.params, param_llvm_types):
+            if llvm_t == INT_T:    vt = 'int'
+            elif llvm_t == FLOAT_T: vt = 'float'
+            elif llvm_t == BOOL_T:  vt = 'bool'
+            elif llvm_t == PTR_T:   vt = 'string'
+            else:                   vt = 'string'
+            vect_param_types.append(vt)
+            func_env.define(p.name, vt)
+
+        inferred_ret = self.checker._infer_return_type(node.body, func_env)
+        ret_vect = inferred_ret if inferred_ret else 'void'
+        llvm_ret = vect_type_to_llvm(ret_vect)
+
+        fn_type = ir.FunctionType(llvm_ret, param_llvm_types)
+        fn = ir.Function(self.module, fn_type, name=f'vect_user_{specialized_name}')
+        self.user_fns[specialized_name] = fn
+
+        entry_block = fn.append_basic_block('entry')
+        old_builder = self.builder
+        self.builder = ir.IRBuilder(entry_block)
+        self._push_scope()
+
+        for param, llvm_arg, llvm_t in zip(node.params, fn.args, param_llvm_types):
+            llvm_arg.name = param.name
+            alloca = self.builder.alloca(llvm_t, name=param.name)
+            self.builder.store(llvm_arg, alloca)
+            self._define_var(param.name, alloca)
+
+        for stmt in node.body:
+            if self.builder.block.is_terminated:
+                break
+            self._compile_stmt(stmt)
+
+        if not self.builder.block.is_terminated:
+            if llvm_ret == VOID_T:
+                self.builder.ret_void()
+            else:
+                self.builder.ret(ir.Constant(llvm_ret, 0))
+
+        self._pop_scope()
+        self.builder = old_builder
 
     def _compile_expr(self, node: Node) -> ir.Value:
         """Compile an expression node, returning its LLVM IR value."""
@@ -931,7 +989,10 @@ class CodeGen:
             a = args[0]
             if a.type == INT_T:   return self.builder.call(self.rt['vect_int_to_str'], [a])
             if a.type == FLOAT_T: return self.builder.call(self.rt['vect_float_to_str'], [a])
-            return a  # already string
+            if a.type == BOOL_T:
+                as_int = self.builder.zext(a, INT_T)
+                return self.builder.call(self.rt['vect_int_to_str'], [as_int])
+            return a  # already a string/pointer — return as-is
 
         # --- transpose ---
         if name == 'transpose':
@@ -1003,12 +1064,36 @@ class CodeGen:
                     self.rt['vect_sym_integrate_definite'],
                     [expr_ptr, var_ptr, lo, hi])
 
-        # --- user-defined function ---
+        # --- user-defined function (annotated) ---
         if name in self.user_fns:
             fn = self.user_fns[name]
             coerced_args = []
             for arg, param_type in zip(args, fn.function_type.args):
                 coerced_args.append(self._coerce(arg, param_type))
+            return self.builder.call(fn, coerced_args)
+
+        # --- inferred function (no annotations) — monomorphize per call ---
+        if name in self.checker._func_nodes:
+            node_ast = self.checker._func_nodes[name]
+            param_types_inferred = [a.type for a in args]
+            # Build a unique name for this specialization
+            type_sig = '_'.join(
+                'i' if t == INT_T else 'f' if t == FLOAT_T
+                else 'b' if t == BOOL_T else 'p'
+                for t in param_types_inferred
+            )
+            specialized_name = f'{name}_{type_sig}'
+            if specialized_name not in self.user_fns:
+                self._compile_inferred_func(node_ast, specialized_name,
+                                             param_types_inferred)
+            fn = self.user_fns[specialized_name]
+            coerced_args = []
+            for arg, param_type in zip(args, fn.function_type.args):
+                # Don't coerce pointer types — they are already the right type
+                if arg.type == PTR_T or param_type == PTR_T:
+                    coerced_args.append(arg)
+                else:
+                    coerced_args.append(self._coerce(arg, param_type))
             return self.builder.call(fn, coerced_args)
 
         raise CodegenError(
