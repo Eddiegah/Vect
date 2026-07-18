@@ -18,7 +18,7 @@ import click
 from .pipeline import run_source, _parse
 from .lexer import LexError
 from .parser import ParseError
-from .type_checker import type_check, TypeError as VectTypeError
+from .type_checker import type_check, TypeError as VectTypeError, MultiTypeError
 from .codegen import CodeGen, CodegenError
 from .runtime import build_runtime, reset_registry
 
@@ -157,6 +157,13 @@ class Repl:
             return
         except VectTypeError as e:
             click.echo(_red(f'  Type error: {e}'), err=False)
+            return
+        except MultiTypeError as e:
+            for err in e.errors:
+                click.echo(_red(f'  Type error: {err}'), err=False)
+            return
+        except CodegenError as e:
+            click.echo(_red(f'  Code error: {e}'), err=False)
             return
         except CodegenError as e:
             click.echo(_red(f'  Code error: {e}'), err=False)

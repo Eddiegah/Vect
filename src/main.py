@@ -86,7 +86,16 @@ def ir(file):
 
 
 def _print_error(e: Exception):
+    from .type_checker import MultiTypeError
     kind = type(e).__name__
+
+    # Multiple type errors — show all of them
+    if isinstance(e, MultiTypeError):
+        click.echo(f'\n  Found {len(e.errors)} error(s):\n', err=True)
+        for i, err in enumerate(e.errors, 1):
+            click.echo(f'  [{i}] {err}\n', err=True)
+        return
+
     if hasattr(e, 'line') and hasattr(e, 'col'):
         msg = str(e)
         if 'Syntax' in kind or 'Lex' in kind or 'Parse' in kind:

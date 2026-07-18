@@ -34,6 +34,14 @@ class TypeError(Exception):
         super().__init__(f"Type error at line {line}, col {col}: {msg}")
 
 
+class MultiTypeError(Exception):
+    """Multiple type errors collected in one pass."""
+    def __init__(self, errors: list):
+        self.errors = errors
+        lines = [str(e) for e in errors]
+        super().__init__('\n'.join(lines))
+
+
 # ---------------------------------------------------------------------------
 # Type constants
 # ---------------------------------------------------------------------------
@@ -143,10 +151,11 @@ class TypeChecker:
     def check(self, program: Program) -> None:
         """
         Type-check a complete program.
-        Raises TypeError on the first violation found.
+        Collects ALL errors across all top-level statements and raises
+        MultiTypeError at the end if any were found. This means you see
+        every problem at once instead of fixing them one by one.
         """
         # First pass: register all top-level function signatures
-        # so functions can call each other regardless of definition order.
         for node in program.body:
             if isinstance(node, FuncDef):
                 self._register_func(node)
@@ -154,9 +163,21 @@ class TypeChecker:
                 self.symbolic_funcs.add(node.name)
                 self.global_env.define(node.name, SYM)
 
-        # Second pass: check all statements
+        # Second pass: check all statements, collecting errors
+        errors = []
         for node in program.body:
-            self._check_stmt(node, self.global_env)
+            try:
+                self._check_stmt(node, self.global_env)
+            except TypeError as e:
+                errors.append(e)
+            except Exception as e:
+                # Unexpected errors still propagate immediately
+                raise
+
+        if errors:
+            if len(errors) == 1:
+                raise errors[0]
+            raise MultiTypeError(errors)
 
     def _register_func(self, node: FuncDef):
         """Record a function's signature in the environment."""
